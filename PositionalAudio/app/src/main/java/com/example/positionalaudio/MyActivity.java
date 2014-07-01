@@ -7,6 +7,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 
 public class MyActivity extends Activity {
 
@@ -39,5 +44,30 @@ public class MyActivity extends Activity {
     public void playSound(View v){
         MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.dovecooing);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+    }
+
+    public byte[] readSoundFile(View v) throws IOException {
+        InputStream in = this.getResources().openRawResource(R.raw.dovecooing);
+        BufferedInputStream bis = new BufferedInputStream(in, 8000);
+// Create a DataInputStream to read the audio data from the saved file
+        DataInputStream dis = new DataInputStream(bis);
+
+        byte[] music = new byte[in.available()];
+        int i = 0; // Read the file into the "music" array
+        while (dis.available() > 0) {
+            // dis.read(music[i]); // This assignment does not reverse the order
+            music[i]=dis.readByte();
+            i++;
+        }
+
+        dis.close();
+
+        return music;
+    }
+
+    public byte[] delayBasedOnPosition(byte[] soundFile, int[] posSound){
+    // The location of the camera is at 0,0
+        int [] posRightEar = {0,0};
+        int []
     }
 }
