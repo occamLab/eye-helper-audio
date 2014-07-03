@@ -11,6 +11,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 
 
@@ -79,17 +80,18 @@ public class MyActivity extends Activity {
         double distanceToLeftEar = Math.sqrt(Math.pow(soundPos[0]*Math.cos(Math.toRadians(soundPos[1])),2) + Math.pow(soundPos[0]*(Math.sin(Math.toRadians(soundPos[1])))-headWidth,2));
         double byteDifference = (soundPos[0] - distanceToLeftEar)/speedOfSound*samplingRate;
         int numBytes = (int) byteDifference;
-        byte[] byteDelay = new byte[numBytes];
+
 
 
         if (byteDifference > 0) {
             //delay on the left side
-            leftSoundFile =
+            leftSoundFile = ;
+            rightSoundFile = Arrays.copyOf(soundFile,(soundFile.length + numBytes));
 
         } else {
             //delay on the right side
+            leftSoundFile = Arrays.copyOf(soundFile, (soundFile.length + numBytes));
+            rightSoundFile = ;
         }
-
-
     }
 }
