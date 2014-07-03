@@ -11,6 +11,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
 
 public class MyActivity extends Activity {
@@ -65,9 +66,30 @@ public class MyActivity extends Activity {
         return music;
     }
 
-    public byte[] delayBasedOnPosition(byte[] soundFile, int[] posSound){
-    // The location of the camera is at 0,0
-        int [] posRightEar = {0,0};
-        int []
+    public byte[] delayBasedOnPosition(byte[] soundFile, int[] posSound, int samplingRate){
+    // The location of the camera (and the right ear) is at 0,0
+        double headWidth = 0.15;
+        int [] soundPos = {1, 45};
+        int speedOfSound = 343;
+        byte [] leftSoundFile;
+        byte [] rightSoundFile;
+
+
+    // Given a distance from the camera and a angle to the camera, what is the distance from the left ear?
+        double distanceToLeftEar = Math.sqrt(Math.pow(soundPos[0]*Math.cos(Math.toRadians(soundPos[1])),2) + Math.pow(soundPos[0]*(Math.sin(Math.toRadians(soundPos[1])))-headWidth,2));
+        double byteDifference = (soundPos[0] - distanceToLeftEar)/speedOfSound*samplingRate;
+        int numBytes = (int) byteDifference;
+        byte[] byteDelay = new byte[numBytes];
+
+
+        if (byteDifference > 0) {
+            //delay on the left side
+            leftSoundFile =
+
+        } else {
+            //delay on the right side
+        }
+
+
     }
 }
