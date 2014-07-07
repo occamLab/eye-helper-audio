@@ -5,46 +5,46 @@ import wave
 import array
 import pyaudio
 import struct
-
-duration = 0.5 # seconds
-freq = 440 # of cycles per second (Hz) (frequency of the sine waves)
-volume = 100 # percent
+import numpy
 
 data = array.array('h') # signed short integer (-32768 to 32767) data
-sampleRate = 44100 # of samples per second (standard)
+
 numChan = 2 # of channels (1: mono, 2: stereo)
 dataSize = 2 # 2 bytes because of using signed short integers => bit depth = 16
-numSamplesPerCyc = int(sampleRate / freq)
-numSamples = int(sampleRate * duration)
-beepSound = []
 
 leftSound = []
 rightSound = []
 
 headWidth = 0.15
 
+file_read = wave.open('dovecooing.wav', 'r')
+sampleRate = file_read.getframerate()
+
+tempSignal = file_read.readframes(-1)
+soundArray = numpy.fromstring(tempSignal, 'Int16')
+
+print soundArray[0]
+
 for angleSection in range(18):
-	angle = 10 * angleSection + 5
+	angle = 10 * angleSection - 85
 	soundPosition = (1, angle)
-	speedOfSound = 331.4
+	speedOfSound = 343
 
 	distanceToLeftEar = math.sqrt((soundPosition[0]*math.cos(math.radians(soundPosition[1])))**2 + (soundPosition[0]*(math.sin(math.radians(soundPosition[1])))-headWidth)**2)
+	print distanceToLeftEar
 	samplesToDelayBy = (soundPosition[0] - distanceToLeftEar)/speedOfSound * sampleRate # If delay is positive, delay left, otherwise, delay right
-	delay = [0] * int(samplesToDelayBy)
+	delay = numpy.zeros(int(abs(samplesToDelayBy)))
 
-	for i in range(numSamples):
-	    sample = 32767 * float(volume) / 100
-	    sample *= math.sin(math.pi * 2 * (i % numSamplesPerCyc) / numSamplesPerCyc)
-	    beepSound.append(sample)
+	print(soundArray)
 
 	if samplesToDelayBy > 0:
-	    leftSound = delay + beepSound
-	    rightSound = beepSound + delay
+		leftSound = numpy.concatenate([delay,soundArray])
+		rightSound = numpy.concatenate([soundArray,delay])
 	else:
-	    leftSound = beepSound + delay
-	    rightSound = delay + beepSound
-
-
+		leftSound = numpy.concatenate([soundArray,delay])
+		rightSound = numpy.concatenate([delay,soundArray])
+	
+	numSamples = rightSound.size
 
 	f = wave.open('angle' + str(angle) + '.wav', 'w')
 	f.setparams((numChan, dataSize, sampleRate, numSamples + int(samplesToDelayBy), "NONE", "Uncompressed"))
