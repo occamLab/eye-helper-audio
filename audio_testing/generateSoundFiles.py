@@ -17,40 +17,40 @@ rightSound = []
 
 headWidth = 0.15
 
-file_read = wave.open('dovecooing.wav', 'r')
-sampleRate = file_read.getframerate()
 
-tempSignal = file_read.readframes(-1)
-soundArray = numpy.fromstring(tempSignal, 'Int16')
 
-print soundArray[0]
+for h in range (1):
+	height = h
 
-for angleSection in range(18):
-	angle = 10 * angleSection - 85
-	soundPosition = (1, angle)
-	speedOfSound = 343
+	file_read = wave.open('Piano' + str(height) + '.wav', 'r')
+	sampleRate = file_read.getframerate()
 
-	distanceToLeftEar = math.sqrt((soundPosition[0]*math.cos(math.radians(soundPosition[1])))**2 + (soundPosition[0]*(math.sin(math.radians(soundPosition[1])))-headWidth)**2)
-	print distanceToLeftEar
-	samplesToDelayBy = (soundPosition[0] - distanceToLeftEar)/speedOfSound * sampleRate # If delay is positive, delay left, otherwise, delay right
-	delay = numpy.zeros(int(abs(samplesToDelayBy)))
+	tempSignal = file_read.readframes(-1)
+	soundArray = numpy.fromstring(tempSignal, 'Int16')
 
-	print(soundArray)
+	for angleSection in range(18):
+		angle = 10 * angleSection - 85
+		soundPosition = (1, angle)
+		speedOfSound = 343
 
-	if samplesToDelayBy > 0:
-		leftSound = numpy.concatenate([delay,soundArray])
-		rightSound = numpy.concatenate([soundArray,delay])
-	else:
-		leftSound = numpy.concatenate([soundArray,delay])
-		rightSound = numpy.concatenate([delay,soundArray])
-	
-	numSamples = rightSound.size
+		distanceToLeftEar = math.sqrt((soundPosition[0]*math.cos(math.radians(soundPosition[1])))**2 + (soundPosition[0]*(math.sin(math.radians(soundPosition[1])))-headWidth)**2)
+		samplesToDelayBy = (soundPosition[0] - distanceToLeftEar)/speedOfSound * sampleRate # If delay is positive, delay left, otherwise, delay right
+		delay = numpy.zeros(int(abs(samplesToDelayBy)))
 
-	f = wave.open('angle' + str(angle) + '.wav', 'w')
-	f.setparams((numChan, dataSize, sampleRate, numSamples + int(samplesToDelayBy), "NONE", "Uncompressed"))
-	#f.writeframes(leftSound.tostring(), rightSound.tostring())
-	for left,right in zip(leftSound,rightSound):
-	    f.writeframes(struct.pack('h', int(right)))
-	    f.writeframes(struct.pack('h', int(left)))
+		if samplesToDelayBy > 0:
+			leftSound = numpy.concatenate([delay,soundArray])
+			rightSound = numpy.concatenate([soundArray,delay])
+		else:
+			leftSound = numpy.concatenate([soundArray,delay])
+			rightSound = numpy.concatenate([delay,soundArray])
+		
+		numSamples = rightSound.size
+
+		f = wave.open('angle' + str(angle) + '.wav', 'w')
+		f.setparams((numChan, dataSize, sampleRate, numSamples + int(samplesToDelayBy), "NONE", "Uncompressed"))
+		#f.writeframes(leftSound.tostring(), rightSound.tostring())
+		for left,right in zip(leftSound,rightSound):
+		    f.writeframes(struct.pack('h', int(right)))
+		    f.writeframes(struct.pack('h', int(left)))
 
 	f.close()

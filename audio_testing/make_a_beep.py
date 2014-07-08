@@ -24,7 +24,7 @@ rightSound = []
 headWidth = 0.15
 
 for angleSection in range(18):
-	angle = 10 * angleSection + 5
+	angle = 10 * angleSection - 85
 	soundPosition = (1, angle)
 	speedOfSound = 331.4
 
