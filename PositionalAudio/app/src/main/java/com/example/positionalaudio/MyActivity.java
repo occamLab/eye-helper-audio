@@ -5,14 +5,7 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.util.Arrays;
+import android.widget.SeekBar;
 
 
 public class MyActivity extends Activity {
@@ -21,6 +14,84 @@ public class MyActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
+
+        SeekBar angleSlider = (SeekBar)findViewById(R.id.seekBar);
+        angleSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                //Find the angle which is closest to progress between
+                // TODO Auto-generated method stub
+
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+                int angleProg = seekBar.getProgress();
+                int angleVal = angleProg - 90;
+                int angleFile;
+                int distance = 10;
+
+                if (angleVal <= -80) {
+                    angleFile = R.raw.angle_85;
+                } else if (angleVal <= -70) {
+                    angleFile = R.raw.angle_75;
+                } else if (angleVal <= -60) {
+                    angleFile = R.raw.angle_65;
+                } else if (angleVal <= -50) {
+                    angleFile = R.raw.angle_55;
+                } else if (angleVal <= -40) {
+                    angleFile = R.raw.angle_45;
+                } else if (angleVal <= -30) {
+                    angleFile = R.raw.angle_35;
+                } else if (angleVal <= -20) {
+                    angleFile = R.raw.angle_25;
+                } else if (angleVal <= -10) {
+                    angleFile = R.raw.angle_15;
+                } else if (angleVal <= 0) {
+                    angleFile = R.raw.angle_5;
+                } else if (angleVal <= 10) {
+                    angleFile = R.raw.angle5;
+                } else if (angleVal <= 20) {
+                    angleFile = R.raw.angle15;
+                } else if (angleVal <= 30) {
+                    angleFile = R.raw.angle25;
+                } else if (angleVal <= 40) {
+                    angleFile = R.raw.angle35;
+                } else if (angleVal <= 50) {
+                    angleFile = R.raw.angle45;
+                } else if (angleVal <= 60) {
+                    angleFile = R.raw.angle55;
+                } else if (angleVal <= 70) {
+                    angleFile = R.raw.angle65;
+                } else if (angleVal <= 80) {
+                    angleFile = R.raw.angle75;
+                } else {
+                    angleFile = R.raw.angle85;
+                }
+
+                long lastPlayTime = System.nanoTime();
+                long ellapsedTime = 0;
+                float waitTime = distance * 1000000000;
+                while (seekBar.isSelected() == false){
+                    ellapsedTime =  System.nanoTime() - lastPlayTime;
+                    if (ellapsedTime > waitTime){
+                        playSound(angleFile);
+                        lastPlayTime = System.nanoTime();
+                    }
+
+
+                }
+
+            }
+        });
+
     }
 
 
@@ -43,55 +114,12 @@ public class MyActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void playSound(View v){
-        MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.dovecooing);
+
+    public void playSound(int fileResource){
+
+        MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), fileResource);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
     }
 
-    public byte[] readSoundFile(View v) throws IOException {
-        InputStream in = this.getResources().openRawResource(R.raw.dovecooing);
-        BufferedInputStream bis = new BufferedInputStream(in, 8000);
-// Create a DataInputStream to read the audio data from the saved file
-        DataInputStream dis = new DataInputStream(bis);
 
-        byte[] music = new byte[in.available()];
-        int i = 0; // Read the file into the "music" array
-        while (dis.available() > 0) {
-            // dis.read(music[i]); // This assignment does not reverse the order
-            music[i]=dis.readByte();
-            i++;
-        }
-
-        dis.close();
-
-        return music;
-    }
-
-    public byte[] delayBasedOnPosition(byte[] soundFile, int[] posSound, int samplingRate){
-    // The location of the camera (and the right ear) is at 0,0
-        double headWidth = 0.15;
-        int [] soundPos = {1, 45};
-        int speedOfSound = 343;
-        byte [] leftSoundFile;
-        byte [] rightSoundFile;
-
-
-    // Given a distance from the camera and a angle to the camera, what is the distance from the left ear?
-        double distanceToLeftEar = Math.sqrt(Math.pow(soundPos[0]*Math.cos(Math.toRadians(soundPos[1])),2) + Math.pow(soundPos[0]*(Math.sin(Math.toRadians(soundPos[1])))-headWidth,2));
-        double byteDifference = (soundPos[0] - distanceToLeftEar)/speedOfSound*samplingRate;
-        int numBytes = (int) byteDifference;
-
-
-
-        if (byteDifference > 0) {
-            //delay on the left side
-            leftSoundFile = ;
-            rightSoundFile = Arrays.copyOf(soundFile,(soundFile.length + numBytes));
-
-        } else {
-            //delay on the right side
-            leftSoundFile = Arrays.copyOf(soundFile, (soundFile.length + numBytes));
-            rightSoundFile = ;
-        }
-    }
 }
