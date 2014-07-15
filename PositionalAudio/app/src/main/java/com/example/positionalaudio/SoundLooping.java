@@ -2,6 +2,7 @@ package com.example.positionalaudio;
 
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 
 /**
  * Created by Sophia on 7/11/14.
@@ -23,7 +24,15 @@ public class SoundLooping extends Thread {
                 prevSeekBarProgress = seekBarProgress;
                 seekBarProgress = msg.arg1;
             } else if (msg.what == 1){
-                distance = msg.arg1;
+                if (msg.arg1 ==0){
+                    distance = 1;
+                    waitTime = 100;
+
+                }else{
+                    distance = msg.arg1;
+                    waitTime = distance * 100;
+                }
+
             }
 
             System.err.println("skb="+seekBarProgress);
@@ -37,7 +46,9 @@ public class SoundLooping extends Thread {
     };
     int prevSeekBarProgress = 0;
     int seekBarProgress = 0;
-    int distance = 0;
+    int distance = 1;
+    long waitTime = distance * 100;
+
 
     public SoundLooping (Handler parentHandler){
 
@@ -51,8 +62,8 @@ public class SoundLooping extends Thread {
     @Override
     public void run(){
 
-        long lastPlayTime = System.nanoTime();
-        long waitTime = distance * 100000000;
+        long lastPlayTime = SystemClock.elapsedRealtime();
+
 
         int angleVal = seekBarProgress - 90;
         int angleFile;
@@ -139,14 +150,13 @@ public class SoundLooping extends Thread {
                 }
             }
 
-            elapsedTime = System.nanoTime() - lastPlayTime;
+            elapsedTime = SystemClock.elapsedRealtime() - lastPlayTime;
 
-            if (elapsedTime > waitTime){
-                lastPlayTime = System.nanoTime();
+            if (elapsedTime > 6000){
+                lastPlayTime = SystemClock.elapsedRealtime();
                 Message msg = Message.obtain();
                 msg.what = 2;
                 msg.arg1 = angleFile;
-                System.err.println("time");
                 activityHandler.sendMessage(msg);
             }
 

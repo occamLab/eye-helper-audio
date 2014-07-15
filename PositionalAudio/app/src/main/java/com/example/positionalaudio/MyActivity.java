@@ -17,6 +17,7 @@ public class MyActivity extends Activity {
         public void handleMessage(Message msg){
 
             System.err.println("Confirmation="+msg.arg1);
+            playSound(msg.arg1);
 
         }
     };
@@ -96,7 +97,7 @@ public class MyActivity extends Activity {
     }
 
     public void playSound(int fileResource){
-        MediaPlayer mediaPlayer = MediaPlayer.create(getApplicationContext(), fileResource);
+        MediaPlayer mediaPlayer = MediaPlayer.create(this.getApplicationContext(), fileResource);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
     }
 
