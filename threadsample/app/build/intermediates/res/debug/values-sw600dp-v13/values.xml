@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- From: file:/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values-sw600dp/bools.xml -->
+    <eat-comment />
+
+    <bool name="hideNavigation">false</bool>
+    <bool name="sideBySide">true</bool>
+    <!-- From: file:/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values-sw600dp/dimens.xml -->
+    <eat-comment />
+
+    <dimen name="thumbSize">160.0dip</dimen>
+
+</resources>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- From: file:/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/bools.xml -->
+    <eat-comment />
+
+    <bool name="hideNavigation">true</bool>
+    <bool name="sideBySide">false</bool>
+    <!-- From: file:/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/attrs.xml -->
+    <eat-comment />
+
+    <declare-styleable name="ImageDownloaderView">
+
+        <!--
+             The sibling to hide after the image is downloaded 
+             and show when the image is being downloaded
+        -->
+        <attr name="hideShowSibling" format="reference" />
+    </declare-styleable>
+    <!-- From: file:/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/dimens.xml -->
+    <eat-comment />
+
+    <dimen name="thumbSize">160.0dip</dimen>
+    <!-- From: file:/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/strings.xml -->
+    <eat-comment />
+
+    <string name="activity_title">Picasa Images</string>
+    <string name="alert_description">Alert!</string>
+    <string name="app_name">Picasa Images</string>
+    <string name="authority">com.example.android.threadsample</string>
+    <string name="no_connection">In offline mode, and no stored data is available.</string>
+    <string name="offline_mode">In offline mode. Stored data is shown.</string>
+    <string name="progress_connecting">Connecting</string>
+    <string name="progress_parsing">Parsing</string>
+    <string name="progress_starting_update">Starting Update</string>
+    <string name="progress_writing">Writing to Database</string>
+    <!-- From: file:/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/styles.xml -->
+    <eat-comment />
+
+    <style name="Theme.NoBackground" parent="@android:style/Theme.NoTitleBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+</resources>

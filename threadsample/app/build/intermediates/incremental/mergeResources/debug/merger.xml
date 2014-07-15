@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merger version="2" >
+
+    <dataSet config="main" >
+        <source path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res" >
+            <file
+                name="decodedecoding"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable/decodedecoding.xml"
+                qualifiers=""
+                type="drawable" />
+            <file
+                name="decodequeued"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable/decodequeued.xml"
+                qualifiers=""
+                type="drawable" />
+            <file
+                name="imagedownloadfailed"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable/imagedownloadfailed.xml"
+                qualifiers=""
+                type="drawable" />
+            <file
+                name="imagedownloading"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable/imagedownloading.xml"
+                qualifiers=""
+                type="drawable" />
+            <file
+                name="imagenotqueued"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable/imagenotqueued.xml"
+                qualifiers=""
+                type="drawable" />
+            <file
+                name="imagequeued"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable/imagequeued.xml"
+                qualifiers=""
+                type="drawable" />
+            <file
+                name="icon"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable-hdpi/icon.png"
+                qualifiers="hdpi-v4"
+                type="drawable" />
+            <file
+                name="icon"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable-ldpi/icon.png"
+                qualifiers="ldpi-v4"
+                type="drawable" />
+            <file
+                name="icon"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable-mdpi/icon.png"
+                qualifiers="mdpi-v4"
+                type="drawable" />
+            <file
+                name="icon"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable-xhdpi/icon.png"
+                qualifiers="xhdpi-v4"
+                type="drawable" />
+            <file
+                name="fragmenthost"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/layout/fragmenthost.xml"
+                qualifiers=""
+                type="layout" />
+            <file
+                name="galleryitem"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/layout/galleryitem.xml"
+                qualifiers=""
+                type="layout" />
+            <file
+                name="gridlist"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/layout/gridlist.xml"
+                qualifiers=""
+                type="layout" />
+            <file
+                name="photo"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/layout/photo.xml"
+                qualifiers=""
+                type="layout" />
+            <file
+                name="progress"
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/layout/progress.xml"
+                qualifiers=""
+                type="layout" />
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/attrs.xml"
+                qualifiers="" >
+                <declare-styleable name="ImageDownloaderView" >
+
+                    <!--
+             The sibling to hide after the image is downloaded 
+             and show when the image is being downloaded
+                    -->
+                    <attr
+                        name="hideShowSibling"
+                        format="reference" />
+                </declare-styleable>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/bools.xml"
+                qualifiers="" >
+                <bool name="sideBySide" >
+false
+                </bool>
+                <bool name="hideNavigation" >
+true
+                </bool>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/dimens.xml"
+                qualifiers="" >
+                <dimen name="thumbSize" >160.0dip
+                </dimen>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/strings.xml"
+                qualifiers="" >
+                <string name="offline_mode" >In offline mode. Stored data is shown.
+                </string>
+                <string name="authority" >com.example.android.threadsample
+                </string>
+                <string name="progress_parsing" >Parsing
+                </string>
+                <string name="progress_connecting" >Connecting
+                </string>
+                <string name="progress_writing" >Writing to Database
+                </string>
+                <string name="progress_starting_update" >Starting Update
+                </string>
+                <string name="app_name" >Picasa Images
+                </string>
+                <string name="alert_description" >Alert!
+                </string>
+                <string name="no_connection" >In offline mode, and no stored data is available.
+                </string>
+                <string name="activity_title" >Picasa Images
+                </string>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values/styles.xml"
+                qualifiers="" >
+
+                <style
+                    name="Theme.NoBackground"
+                    parent="@android:style/Theme.NoTitleBar" >
+                    <item name="android:windowBackground">
+@android:color/black
+                    </item>
+                </style>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values-sw600dp/bools.xml"
+                qualifiers="sw600dp-v13" >
+                <bool name="sideBySide" >
+true
+                </bool>
+                <bool name="hideNavigation" >
+false
+                </bool>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values-sw600dp/dimens.xml"
+                qualifiers="sw600dp-v13" >
+                <dimen name="thumbSize" >160.0dip
+                </dimen>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values-v11/styles.xml"
+                qualifiers="v11" >
+
+                <style
+                    name="Theme.NoBackground"
+                    parent="@android:style/Theme.Holo" >
+                    <item name="android:windowBackground">
+@android:color/black
+                    </item>
+                </style>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values-xlarge/bools.xml"
+                qualifiers="xlarge-v4" >
+                <bool name="hideNavigation" >
+false
+                </bool>
+                <bool name="sideBySide" >
+true
+                </bool>
+            </file>
+            <file
+                path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/values-xlarge/dimens.xml"
+                qualifiers="xlarge-v4" >
+                <dimen name="thumbSize" >160.0dip
+                </dimen>
+            </file>
+        </source>
+        <source path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/build/generated/res/rs/debug" />
+        <source path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/build/generated/res/generated/debug" />
+    </dataSet>
+    <dataSet config="debug" >
+        <source path="/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/debug/res" />
+    </dataSet>
+
+</merger>
