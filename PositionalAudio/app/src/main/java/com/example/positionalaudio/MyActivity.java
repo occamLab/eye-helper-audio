@@ -11,13 +11,25 @@ import android.widget.SeekBar;
 
 
 public class MyActivity extends Activity {
-    private SoundLooping soundLooper;
+    int angle = 0;
+    int height = 0;
+    int distance = 1;
+    int currentFile;
     public Handler soundHandler = new Handler() {
         @Override
         public void handleMessage(Message msg){
 
-            System.err.println("Confirmation="+msg.arg1);
-            playSound(msg.arg1);
+            System.err.println("msg.what="+msg.what);
+            System.err.println("msg.arg="+msg.arg1);
+
+            if (msg.what == 0){
+                playSound(msg.arg1);
+            }else if  (msg.what == 1){
+                if (msg.arg1 == currentFile){
+                    playSound(msg.arg1);
+                }
+            }
+
 
         }
     };
@@ -28,18 +40,18 @@ public class MyActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
 
-        soundLooper = new SoundLooping(soundHandler);
-        soundLooper.start();
-
         SeekBar angleSlider = (SeekBar) findViewById(R.id.angle);
 
         angleSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                angle = progress;
+                currentFile = getSoundFile();
                 Message msg = Message.obtain();
                 msg.what = 0;
-                msg.arg1 = seekBar.getProgress();
-               soundLooper.getHandler().sendMessage(msg);
+                msg.arg1 = currentFile;
+                soundHandler.sendMessage(msg);
+
 
             }
 
@@ -58,10 +70,8 @@ public class MyActivity extends Activity {
         distanceSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                Message msg = Message.obtain();
-                msg.what = 1;
-                msg.arg1 = seekBar.getProgress();
-                soundLooper.getHandler().sendMessage(msg);
+                distance = progress;
+
             }
 
             @Override
@@ -96,9 +106,65 @@ public class MyActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    public int getSoundFile(){
+        int angleFile;
+
+        if (angle <= -80) {
+            angleFile = R.raw.angle_85;
+        } else if (angle <= -70) {
+            angleFile = R.raw.angle_75;
+        } else if (angle <= -60) {
+            angleFile = R.raw.angle_65;
+        } else if (angle <= -50) {
+            angleFile = R.raw.angle_55;
+        } else if (angle <= -40) {
+            angleFile = R.raw.angle_45;
+        } else if (angle <= -30) {
+            angleFile = R.raw.angle_35;
+        } else if (angle <= -20) {
+            angleFile = R.raw.angle_25;
+        } else if (angle <= -10) {
+            angleFile = R.raw.angle_15;
+        } else if (angle <= 0) {
+            angleFile = R.raw.angle_5;
+        } else if (angle <= 10) {
+            angleFile = R.raw.angle5;
+        } else if (angle <= 20) {
+            angleFile = R.raw.angle15;
+        } else if (angle <= 30) {
+            angleFile = R.raw.angle25;
+        } else if (angle <= 40) {
+            angleFile = R.raw.angle35;
+        } else if (angle <= 50) {
+            angleFile = R.raw.angle45;
+        } else if (angle <= 60) {
+            angleFile = R.raw.angle55;
+        } else if (angle <= 70) {
+            angleFile = R.raw.angle65;
+        } else if (angle <= 80) {
+            angleFile = R.raw.angle75;
+        } else {
+            angleFile = R.raw.angle85;
+        }
+
+        return angleFile;
+    }
+
     public void playSound(int fileResource){
         MediaPlayer mediaPlayer = MediaPlayer.create(this.getApplicationContext(), fileResource);
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.release();
+            }
+        });
+
+        Message msg = Message.obtain();
+        msg.what = 1;
+        msg.arg1 = fileResource;
+        soundHandler.sendMessageDelayed(msg, distance*1000L);
+
     }
 
 

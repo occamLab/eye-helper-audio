@@ -152,7 +152,7 @@ public class SoundLooping extends Thread {
 
             elapsedTime = SystemClock.elapsedRealtime() - lastPlayTime;
 
-            if (elapsedTime > 6000){
+            if (elapsedTime > distance*1000){
                 lastPlayTime = SystemClock.elapsedRealtime();
                 Message msg = Message.obtain();
                 msg.what = 2;
