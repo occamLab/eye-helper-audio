@@ -33,8 +33,8 @@ for h in range (8):
 	tempSignal = file_read.readframes(-1)
 	soundArray = numpy.fromstring(tempSignal, 'Int16')
 
-	if not os.path.exists('GeneratedSoundFiles/' + fileBaseName + str(height)):
-		os.makedirs('GeneratedSoundFiles/' + fileBaseName + str(height))	
+	# if not os.path.exists('GeneratedSoundFiles/' + fileBaseName + str(height)):
+	# 	os.makedirs('GeneratedSoundFiles/' + fileBaseName + str(height))	
 
 	for angleSection in range(18):
 		angle = 10 * angleSection - 85
@@ -56,9 +56,11 @@ for h in range (8):
 		
 		numSamples = rightSound.size
 		if angle < 0:
-			f = wave.open('GeneratedSoundFiles/' + fileBaseName + str(height) + '/angle_' + str(abs(angle)) + '.wav', 'w')
+			# f = wave.open('GeneratedSoundFiles/' + fileBaseName + str(height) + '/angle_' + str(abs(angle)) + '.wav', 'w')
+			f = wave.open('GeneratedSoundFiles/height' + str(height) + 'angle_' + str(abs(angle)) + '.wav', 'w')
 		else:
-			f = wave.open('GeneratedSoundFiles/' + fileBaseName + str(height) + '/angle' + str(angle) + '.wav', 'w')
+			# f = wave.open('GeneratedSoundFiles/' + fileBaseName + str(height) + '/angle' + str(angle) + '.wav', 'w')
+			f = wave.open('GeneratedSoundFiles/height' + str(height) + 'angle' + str(abs(angle)) + '.wav', 'w')
 		f.setparams((numChan, dataSize, sampleRate, numSamples + int(samplesToDelayBy), "NONE", "Uncompressed"))
 		#f.writeframes(leftSound.tostring(), rightSound.tostring())
 		for left,right in zip(leftSound,rightSound):
