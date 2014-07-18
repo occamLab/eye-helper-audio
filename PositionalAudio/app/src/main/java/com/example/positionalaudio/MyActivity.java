@@ -11,26 +11,37 @@ import android.widget.SeekBar;
 
 
 public class MyActivity extends Activity {
+    //Initialize angle, height, and distance (of the object)
     int angle = -90;
     int height = 0;
     int distance = 1;
-    int currentFile;
+    //The sound file that is currently playing
+    int currentFile = R.raw.height0angle_85;
+    //The media player to play the sound file
+    MediaPlayer mediaPlayer;
+
+
+    //Initialize the Message Handler
     public Handler soundHandler = new Handler() {
+
+        //When the media player gets a message
         @Override
-        public void handleMessage(Message msg){
+        public void handleMessage(Message msg) {
 
-            System.err.println("msg.what="+msg.what);
-            System.err.println("msg.arg="+msg.arg1);
-
-            if (msg.what == 0){
-                playSound(msg.arg1);
-            }else if  (msg.what == 1){
-                if (msg.arg1 == currentFile){
-                    playSound(msg.arg1);
+            //If the message is from the angle or height changing
+            if (msg.what == 0) {
+                //If the current sound file is still the same as the one we wanted to play, play the file
+                if (msg.arg1 == currentFile) {
+                    playSound(currentFile);
                 }
+                //The message is from wanting to repeat the last sound played
+            } else if (msg.what == 1) {
+                //Only repeat if we are still playing the current sound file
+                if (msg.arg1 == currentFile) {
+                    playSound(currentFile);
+                }
+
             }
-
-
         }
     };
 
@@ -40,6 +51,12 @@ public class MyActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my);
 
+        //Start playing the sound file in the beginning
+        mediaPlayer = MediaPlayer.create(this.getApplicationContext(),currentFile);
+        playSound(currentFile);
+
+        //Initialize the Seekbars
+        //The angle seekbar
         SeekBar angleSlider = (SeekBar) findViewById(R.id.angle);
 
         angleSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -53,23 +70,32 @@ public class MyActivity extends Activity {
 
             }
 
+            //When the user lets go of the seekbar
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+
+                //Set the angle
                 angle = seekBar.getProgress() - 90;
-                currentFile = getSoundFile();
-                Message msg = Message.obtain();
-                msg.what = 0;
-                msg.arg1 = currentFile;
-                soundHandler.sendMessage(msg);
+                //Check if the file corresponding to the current angle is different from the current sound file
+                int tempCurrentFile = getSoundFile();
+                if (tempCurrentFile != currentFile) {
+                    //If it is, send a message to play a new sound file, and update the current sound file
+                    Message msg = Message.obtain();
+                    msg.what = 0;
+                    msg.arg1 = tempCurrentFile;
+                    currentFile = tempCurrentFile;
+                    soundHandler.sendMessage(msg);
+                }
 
             }
         });
 
+        //The seekbar controlling distance
         SeekBar distanceSlider = (SeekBar) findViewById(R.id.distance);
         distanceSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
+                //When the value of the seekbar changes, update distance. (+1 so that we don't have distance = 0)
                 distance = progress + 1;
 
             }
@@ -85,6 +111,7 @@ public class MyActivity extends Activity {
             }
         });
 
+        //Seekbar controlling height
         SeekBar heightSlider = (SeekBar) findViewById(R.id.height);
         heightSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -99,12 +126,19 @@ public class MyActivity extends Activity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
+
+                //set the new height
                 height = seekBar.getProgress()/10;
-                currentFile = getSoundFile();
-                Message msg = Message.obtain();
-                msg.what = 0;
-                msg.arg1 = currentFile;
-                soundHandler.sendMessage(msg);
+                //Check if the sound file corresponding to the current height is different from the current sound file
+                int tempCurrentFile = getSoundFile();
+                if (tempCurrentFile != currentFile) {
+                    //If it is, send a message to play a new sound file, and update the current sound file.
+                    Message msg = Message.obtain();
+                    msg.what = 0;
+                    msg.arg1 = tempCurrentFile;
+                    currentFile = tempCurrentFile;
+                    soundHandler.sendMessage(msg);
+                }
             }
         });
 
@@ -129,8 +163,12 @@ public class MyActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    //Decide which sound file to play
     public int getSoundFile(){
         int angleFile;
+
+        //If the height is less than one, chose a sound file based on angle. Angles are in the middle of angle ranges of 10 degrees
+        //For Example angles 1-10 -> angle5
         if (height < 1){
             if (angle <= -80) {
                 angleFile = R.raw.height0angle_85;
@@ -169,6 +207,8 @@ public class MyActivity extends Activity {
             } else {
                 angleFile = R.raw.height0angle85;
             }
+
+        //If the height is less than 2, choose a sound file corresponding to height 1 and some angle
         } else if (height < 2){
             if (angle <= -80) {
                 angleFile = R.raw.height1angle_85;
@@ -207,6 +247,7 @@ public class MyActivity extends Activity {
             } else {
                 angleFile = R.raw.height1angle85;
             }
+            //If the height is less than 3, choose a sound file corresponding to height 2 and the angle
         } else if (height < 3){
             if (angle <= -80) {
                 angleFile = R.raw.height2angle_85;
@@ -245,6 +286,7 @@ public class MyActivity extends Activity {
             } else {
                 angleFile = R.raw.height2angle85;
             }
+            //If the height is less than 4, choose a sound file corresponding to height 3 and the angle
         } else if (height < 4){
             if (angle <= -80) {
                 angleFile = R.raw.height3angle_85;
@@ -283,6 +325,7 @@ public class MyActivity extends Activity {
             } else {
                 angleFile = R.raw.height3angle85;
             }
+            //If the height is less than 5, choose a sound file corresponding to height 4 and the angle
         } else if (height < 5){
             if (angle <= -80) {
                 angleFile = R.raw.height4angle_85;
@@ -321,6 +364,8 @@ public class MyActivity extends Activity {
             } else {
                 angleFile = R.raw.height4angle85;
             }
+
+            //If the height is less than 6, choose a sound file corresponding to height 5 and the angle
         } else if (height < 6){
             if (angle <= -80) {
                 angleFile = R.raw.height5angle_85;
@@ -359,6 +404,7 @@ public class MyActivity extends Activity {
             } else {
                 angleFile = R.raw.height5angle85;
             }
+            //If the height is less than 7, choose a sound file corresponding to height 6 and the angle
         } else if (height < 7) {
             if (angle <= -80) {
                 angleFile = R.raw.height6angle_85;
@@ -397,6 +443,7 @@ public class MyActivity extends Activity {
             } else {
                 angleFile = R.raw.height6angle85;
             }
+            //Otherwise, choose a sound file corresponding to height 7 and the angle.
         } else {
             if (angle <= -80) {
                 angleFile = R.raw.height7angle_85;
@@ -437,24 +484,34 @@ public class MyActivity extends Activity {
             }
         }
 
-
+        //Return which file to play
         return angleFile;
     }
 
+    //Play a sound given the resource
     public void playSound(int fileResource){
-        MediaPlayer mediaPlayer = MediaPlayer.create(this.getApplicationContext(), fileResource);
+        //If a sound is currently playing, stop it.
+        mediaPlayer.release();
+        //Set up the media player
+        mediaPlayer = MediaPlayer.create(this.getApplicationContext(), fileResource);
+        //Start playing
         mediaPlayer.start(); // no need to call prepare(); create() does that for you
+        //Listen for completion
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
+                //Release the media player on completion
                 mp.release();
             }
         });
 
+        //Send a message to repeat the sound file some time later
         Message msg = Message.obtain();
+        //Msg.what = 1 means that this is to repeat a sound file
         msg.what = 1;
         msg.arg1 = fileResource;
-        soundHandler.sendMessageDelayed(msg, distance*500L);
+        //Delay sending based on the distance from the object
+        soundHandler.sendMessageDelayed(msg, distance*600L);
 
     }
 
