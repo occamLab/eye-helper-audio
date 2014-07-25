@@ -18,7 +18,7 @@ public class ColorBlobDetector {
     // Minimum contour area in percent for contours filtering
     private static double mMinContourArea = 0.1;
     // Color radius for range checking in HSV color space
-    private Scalar mColorRadius = new Scalar(20,40,40,0);
+    private Scalar mColorRadius = new Scalar(60,60,60,0);
     //The spectrum of what we are tracking
     private Mat mSpectrum = new Mat();
     //The list of all the contours
@@ -81,7 +81,6 @@ public class ColorBlobDetector {
 
     //Process the image
     public void process(Mat rgbaImage) {
-
         //Downsample the image twice
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
         Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);

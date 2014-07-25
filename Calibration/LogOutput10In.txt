@@ -1,0 +1,46 @@
+07-24 09:57:04.278    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.278    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 177 Height: 137
+07-24 09:57:04.349    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.357    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 137
+07-24 09:57:04.411    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.411    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 185 Height: 137
+07-24 09:57:04.482    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.482    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 185 Height: 137
+07-24 09:57:04.552    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.552    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 185 Height: 137
+07-24 09:57:04.614    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.614    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 189 Height: 137
+07-24 09:57:04.693    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.693    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 185 Height: 137
+07-24 09:57:04.747    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.747    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 185 Height: 137
+07-24 09:57:04.818    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.818    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 137
+07-24 09:57:04.888    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.888    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 185 Height: 137
+07-24 09:57:04.943    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:04.943    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 133
+07-24 09:57:05.036    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.036    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 137
+07-24 09:57:05.114    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.114    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 137
+07-24 09:57:05.161    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.161    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 137
+07-24 09:57:05.224    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.224    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 177 Height: 137
+07-24 09:57:05.278    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.278    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 177 Height: 137
+07-24 09:57:05.357    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.357    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 177 Height: 137
+07-24 09:57:05.419    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.419    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 177 Height: 137
+07-24 09:57:05.489    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.489    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 137
+07-24 09:57:05.544    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.544    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 137
+07-24 09:57:05.622    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.622    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 177 Height: 137
+07-24 09:57:05.693    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.693    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 177 Height: 137
+07-24 09:57:05.763    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Contours count: 1
+07-24 09:57:05.763    6430-6528/com.example.positionalaudiocvtesting E/OCVSample::Activity﹕ Width: 181 Height: 137

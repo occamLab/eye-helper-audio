@@ -43,6 +43,17 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     //The color of the contours
     private Scalar CONTOUR_COLOR;
 
+    //Camera Parameters
+    double focal = 2.8;
+    int objWidth = 127;
+    int imgHeight = 512;
+    int sensorHeight = 4;
+
+    //Position Variables
+    double distance = -1;
+
+
+
     //The camera view
     private CameraBridgeViewBase mOpenCvCameraView;
     //This is what we use to determine whether or not the app loaded successfully
@@ -136,81 +147,12 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         mRgba.release();
     }
 
-    //When the screen is touched
-//    public boolean onTouch(View v, MotionEvent event) {
-//        //Get the number of rows and columns in the camera image matrix
-//        int cols = mRgba.cols();
-//        int rows = mRgba.rows();
-//
-//        //Get the offset - the camera view's width and columns are offset
-//        int xOffset = (mOpenCvCameraView.getWidth() - cols) / 2;
-//        int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
-//
-//        //Get the X and Y position of the screen touch (and map it to the matrix
-//        int x = (int)event.getX() - xOffset;
-//        int y = (int)event.getY() - yOffset;
-//
-//        Log.i(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
-//
-//        //If the touch was off the screen or outside the image, return false
-//        if ((x < 0) || (y < 0) || (x > cols) || (y > rows)) {
-//            return false;
-//        }
-//
-//        //Make a rectangle corresponding to the touch area
-//        Rect touchedRect = new Rect();
-//
-//        //Declare the X and Y as well as width and height of the rectangle
-//        touchedRect.x = (x>4) ? x-4 : 0;
-//        touchedRect.y = (y>4) ? y-4 : 0;
-//
-//        touchedRect.width = (x+4 < cols) ? x + 4 - touchedRect.x : cols - touchedRect.x;
-//        touchedRect.height = (y+4 < rows) ? y + 4 - touchedRect.y : rows - touchedRect.y;
-//
-//        //get the corresponding points in the image that are in that rectangle.
-//        Mat touchedRegionRgba = mRgba.submat(touchedRect);
-//
-//        //Declare the HSV for that rectangle
-//        Mat touchedRegionHsv = new Mat();
-//        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
-//
-//        // Calculate average color of touched region
-//        mBlobColorHsv = Core.sumElems(touchedRegionHsv);
-//        int pointCount = touchedRect.width*touchedRect.height;
-//        for (int i = 0; i < mBlobColorHsv.val.length; i++)
-//            mBlobColorHsv.val[i] /= pointCount;
-//
-//        Log.i(TAG, "Touched HSV color: (" + mBlobColorHsv.val[0] + ", " + mBlobColorHsv.val[1] +
-//                ", " + mBlobColorHsv.val[2] + ", " + mBlobColorHsv.val[3] + ")");
-//
-//        //Get the RGBA from the HSV
-//        mBlobColorRgba = converScalarHsv2Rgba(mBlobColorHsv);
-//
-//        Log.i(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
-//                ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
-//
-//        //Set the HSV color to be the average color
-//        mDetector.setHsvColor(mBlobColorHsv);
-//
-//        //Resize the spectrum to fit on the image
-//        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
-//
-//        //We have selected a color
-//        mIsColorSelected = true;
-//
-//        //We don't need the touched region RGBa or HSV anymore
-//        touchedRegionRgba.release();
-//        touchedRegionHsv.release();
-//
-//        return false; // don't need subsequent touch events
-//    }
-
     //Every time we get a new camera frame
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         //the image matrix is the input frame converted to RGBa
         mRgba = inputFrame.rgba();
-
-        //if we are tracking a color
+        Log.e(TAG, "Image Size" + mRgba.size());
+                //if we are tracking a color
         if (mIsColorSelected) {
             //process the color
             mDetector.process(mRgba);
@@ -221,15 +163,31 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
             //Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
             //For each set of contours, draw a rectangle
-            for (int i = 0; i < contours.size(); i++){
-                Rect bounding = Imgproc.boundingRect(contours.get(i));
-                Point p1 = new Point(bounding.x, bounding.y);
+            if (contours.size() > 0) {
+                Rect largestContourRect = Imgproc.boundingRect(contours.get(0));
 
-                Point p2 = new Point(bounding.x + bounding.width,bounding.y + bounding.height);
+                for (int i = 0; i < contours.size(); i++) {
+                    Rect bounding = Imgproc.boundingRect(contours.get(i));
+                    if (bounding.area() > largestContourRect.area()) {
+                        largestContourRect = bounding;
+                    }
+                }
 
-                Core.rectangle(mRgba, p1, p2, CONTOUR_COLOR,1);
+                Point p1 = new Point(largestContourRect.x, largestContourRect.y);
+
+                Point p2 = new Point(largestContourRect.x + largestContourRect.width, largestContourRect.y + largestContourRect.height);
+
+                Core.rectangle(mRgba, p1, p2, CONTOUR_COLOR, 1);
+                //Log.e(TAG, "Width: " + largestContourRect.width + " Height: " + largestContourRect.height);
+                double tempDistance = (focal * objWidth * imgHeight) / (largestContourRect.width * sensorHeight);
+
+
+                if (Math.abs(tempDistance-distance) > 100){
+                    distance = tempDistance;
+                }
+
+                Log.e(TAG, "Distance: " + distance);
             }
-
             //Define the color label
             Mat colorLabel = mRgba.submat(4, 68, 4, 68);
             //set the color label to the blob's average RGBa
