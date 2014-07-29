@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -51,6 +52,13 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     //Position Variables
     double distance = -1;
+    double angle = 0;
+    double height;
+
+    //Text Views
+    TextView angleText;
+    TextView heightText;
+    TextView distanceText;
 
 
 
@@ -96,6 +104,10 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         //Make this class, which extends CameraVeiwListener the listener
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+        angleText = (TextView) findViewById(R.id.textViewA);
+        heightText = (TextView) findViewById(R.id.textViewH);
+        distanceText = (TextView) findViewById(R.id.textViewD);
     }
 
     @Override
@@ -151,8 +163,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         //the image matrix is the input frame converted to RGBa
         mRgba = inputFrame.rgba();
-        Log.e(TAG, "Image Size" + mRgba.size());
-                //if we are tracking a color
+        Log.e(TAG, "Size " + mRgba.size());
+        //if we are tracking a color
         if (mIsColorSelected) {
             //process the color
             mDetector.process(mRgba);
@@ -179,14 +191,31 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
                 Core.rectangle(mRgba, p1, p2, CONTOUR_COLOR, 1);
                 //Log.e(TAG, "Width: " + largestContourRect.width + " Height: " + largestContourRect.height);
+                //Log.e(TAG, "X: " + largestContourRect.x + " Y: " + largestContourRect.y);
+                //distance in mm
                 double tempDistance = (focal * objWidth * imgHeight) / (largestContourRect.width * sensorHeight);
 
 
                 if (Math.abs(tempDistance-distance) > 100){
-                    distance = tempDistance;
+                    //convert to cm
+                    distance = tempDistance/10;
                 }
 
+                angle = (76*(largestContourRect.x + largestContourRect.width/2)/512.0) - 38;
+
+                double elivAngle = (62*(largestContourRect.y + largestContourRect.height/2)/288.0) - 31;
+
+                //Assuming that the average person is 175 cm
+                height = 175 - distance*Math.sin(Math.toRadians(elivAngle));
+
+
                 Log.e(TAG, "Distance: " + distance);
+                Log.e(TAG, "Angle: " + angle);
+                Log.e(TAG, "Height: " + height);
+
+                updateText();
+
+
             }
             //Define the color label
             Mat colorLabel = mRgba.submat(4, 68, 4, 68);
@@ -209,5 +238,19 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
         return new Scalar(pointMatRgba.get(0, 0));
     }
+
+    public void updateText(){
+        MyActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+
+                distanceText.setText("Distance: " + String.format("%.1f", distance));
+                angleText.setText("Angle: " + String.format("%.1f", angle));
+                heightText.setText("Height: " + String.format("%.1f", height));
+            }
+        });
+
+    }
+
 }
 
