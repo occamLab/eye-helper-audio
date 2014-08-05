@@ -93,7 +93,9 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                     }
                 }else{
                     playSound(currentFile);
-                    lastPlayTime = System.nanoTime();
+                    if (msg.arg1 == currentFile) {
+                        lastPlayTime = System.nanoTime();
+                    }
                 }
 
 
@@ -169,7 +171,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
         mediaPlayer.release();
-        
+
     }
 
     @Override
