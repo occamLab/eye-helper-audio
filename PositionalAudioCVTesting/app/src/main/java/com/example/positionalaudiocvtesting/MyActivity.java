@@ -1,8 +1,12 @@
 package com.example.positionalaudiocvtesting;
 
 import android.app.Activity;
+import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -24,9 +28,9 @@ import org.opencv.imgproc.Imgproc;
 import java.util.List;
 
 
-public class MyActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2{
+public class MyActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
     //The Tag for the logcat
-    private static final String  TAG = "OCVSample::Activity";
+    private static final String TAG = "OCVSample::Activity";
     //Are we tracking a color
     private boolean mIsColorSelected = false;
     //The matrix of the image in rgba
@@ -51,16 +55,59 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     int sensorHeight = 4;
 
     //Position Variables
-    double distance = -1;
+    double distance = 100;
     double angle = 0;
-    double height;
+    double height = 0;
+
+    //Sound Variables
+    MediaPlayer mediaPlayer = new MediaPlayer();
+    long lastPlayTime = System.nanoTime();
+    int currentFile = R.raw.height0angle_85;
+
 
     //Text Views
     TextView angleText;
     TextView heightText;
     TextView distanceText;
 
+    //Initialize the Message Handler
+    public Handler soundHandler = new Handler() {
 
+        //When the media player gets a message
+        @Override
+        public void handleMessage(Message msg) {
+
+            //If the message is from the angle or height changing
+            if (msg.what == 0) {
+                //If the current sound file is still the same as the one we wanted to play, play the file
+                Log.e(TAG, "Time" + (System.nanoTime() - lastPlayTime));
+                if ((System.nanoTime() - lastPlayTime) < 600000000L) {
+                    Log.e(TAG, "Playing");
+                    if (msg.arg1 == currentFile) {
+                        Message msgDel = Message.obtain();
+                        //Msg.what = 1 means that this is to repeat a sound file
+                        msgDel.what = 0;
+                        msgDel.arg1 = currentFile;
+                        //Delay sending based on the distance from the object
+                        soundHandler.sendMessageDelayed(msgDel, 300);
+                    }
+                }else{
+                    playSound(currentFile);
+                    lastPlayTime = System.nanoTime();
+                }
+
+
+                //The message is from wanting to repeat the last sound played
+            } else if (msg.what == 1) {
+                //Only repeat if we are still playing the current sound file
+                if (msg.arg1 == currentFile) {
+                    playSound(currentFile);
+                    lastPlayTime = System.nanoTime();
+                }
+
+            }
+        }
+    };
 
     //The camera view
     private CameraBridgeViewBase mOpenCvCameraView;
@@ -70,20 +117,21 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         public void onManagerConnected(int status) {
             switch (status) {
                 //The app loaded successfully
-                case LoaderCallbackInterface.SUCCESS:
-                {
+                case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV loaded successfully");
                     mOpenCvCameraView.enableView();
                     //mOpenCvCameraView.setOnTouchListener(MyActivity.this);
-                } break;
+                }
+                break;
                 //Otherwise it didn't
-                default:
-                {
+                default: {
                     super.onManagerConnected(status);
-                } break;
+                }
+                break;
             }
         }
     };
+
     //On the constructor for this activity
     public MyActivity() {
         Log.i(TAG, "Instantiated new " + ((Object) this).getClass());
@@ -108,6 +156,10 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         angleText = (TextView) findViewById(R.id.textViewA);
         heightText = (TextView) findViewById(R.id.textViewH);
         distanceText = (TextView) findViewById(R.id.textViewD);
+
+        //Start playing the sound file in the beginning
+//        mediaPlayer.create(this.getApplicationContext(), currentFile);
+//        playSound(currentFile);
     }
 
     @Override
@@ -116,6 +168,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        mediaPlayer.release();
+        
     }
 
     @Override
@@ -130,7 +184,20 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        mediaPlayer.release();
     }
+
+    public boolean onKeyDown(int keycode, KeyEvent event) {
+        if (keycode == KeyEvent.KEYCODE_BACK) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            finish();
+        }
+        return false;
+    }
+
 
     //Right after the camera starts
     public void onCameraViewStarted(int width, int height) {
@@ -147,11 +214,11 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         //The spectrum is 200 x 64
         SPECTRUM_SIZE = new Size(200, 64);
         //The contour color, declared as red
-        CONTOUR_COLOR = new Scalar(255,0,0,255);
+        CONTOUR_COLOR = new Scalar(255, 0, 0, 255);
         //We are tracking a color
         mIsColorSelected = true;
         //Tracking the color black
-        mDetector.setHsvColor(new Scalar(130,25,55,0));
+        mDetector.setHsvColor(new Scalar(130, 25, 55, 0));
     }
 
     public void onCameraViewStopped() {
@@ -163,14 +230,14 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         //the image matrix is the input frame converted to RGBa
         mRgba = inputFrame.rgba();
-        Log.e(TAG, "Size " + mRgba.size());
+        //Log.e(TAG, "Size " + mRgba.size());
         //if we are tracking a color
         if (mIsColorSelected) {
             //process the color
             mDetector.process(mRgba);
             //get the contours from that color
             List<MatOfPoint> contours = mDetector.getContours();
-            Log.e(TAG, "Contours count: " + contours.size());
+            //Log.e(TAG, "Contours count: " + contours.size());
             //Draw the contours
             //Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
 
@@ -193,25 +260,41 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 //Log.e(TAG, "Width: " + largestContourRect.width + " Height: " + largestContourRect.height);
                 //Log.e(TAG, "X: " + largestContourRect.x + " Y: " + largestContourRect.y);
                 //distance in mm
+
+                //Smoothing the distance signal
                 double tempDistance = (focal * objWidth * imgHeight) / (largestContourRect.width * sensorHeight);
 
+                double smoothing = 10.0;
 
-                if (Math.abs(tempDistance-distance) > 100){
-                    //convert to cm
-                    distance = tempDistance/10;
-                }
+//                if (Math.abs(tempDistance-distance) > 100){
+//                    //convert to cm
+//                    distance = tempDistance/10;
+//                }
 
-                angle = (76*(largestContourRect.x + largestContourRect.width/2)/512.0) - 38;
+                distance += ((tempDistance / 10) - distance) / smoothing;
 
-                double elivAngle = (62*(largestContourRect.y + largestContourRect.height/2)/288.0) - 31;
+
+                angle = (76 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 38;
+
+                double elivAngle = (62 * (largestContourRect.y + largestContourRect.height / 2) / 288.0) - 31;
 
                 //Assuming that the average person is 175 cm
-                height = 175 - distance*Math.sin(Math.toRadians(elivAngle));
+                //height = 175 - distance*Math.sin(Math.toRadians(elivAngle));
 
+                int tempCurrentFile = getSoundFile();
 
-                Log.e(TAG, "Distance: " + distance);
-                Log.e(TAG, "Angle: " + angle);
-                Log.e(TAG, "Height: " + height);
+                if (tempCurrentFile != currentFile) {
+                    //If it is, send a message to play a new sound file, and update the current sound file
+                    Message msg = Message.obtain();
+                    msg.what = 0;
+                    msg.arg1 = tempCurrentFile;
+                    currentFile = tempCurrentFile;
+                    soundHandler.sendMessage(msg);
+                }
+
+//                Log.e(TAG, "Distance: " + distance);
+//                Log.e(TAG, "Angle: " + angle);
+//                Log.e(TAG, "Height: " + height);
 
                 updateText();
 
@@ -239,7 +322,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         return new Scalar(pointMatRgba.get(0, 0));
     }
 
-    public void updateText(){
+    public void updateText() {
         MyActivity.this.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -252,5 +335,363 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     }
 
+    //Decide which sound file to play
+    public int getSoundFile() {
+        int angleFile;
+
+        //If the height is less than one, chose a sound file based on angle. Angles are in the middle of angle ranges of 10 degrees
+        //For Example angles 1-10 -> angle5
+        if (height < 1) {
+            if (angle <= -80) {
+                angleFile = R.raw.height0angle_85;
+            } else if (angle <= -70) {
+                angleFile = R.raw.height0angle_75;
+            } else if (angle <= -60) {
+                angleFile = R.raw.height0angle_65;
+            } else if (angle <= -50) {
+                angleFile = R.raw.height0angle_55;
+            } else if (angle <= -40) {
+                angleFile = R.raw.height0angle_45;
+            } else if (angle <= -30) {
+                angleFile = R.raw.height0angle_35;
+            } else if (angle <= -20) {
+                angleFile = R.raw.height0angle_25;
+            } else if (angle <= -10) {
+                angleFile = R.raw.height0angle_15;
+            } else if (angle <= 0) {
+                angleFile = R.raw.height0angle_5;
+            } else if (angle <= 10) {
+                angleFile = R.raw.height0angle5;
+            } else if (angle <= 20) {
+                angleFile = R.raw.height0angle15;
+            } else if (angle <= 30) {
+                angleFile = R.raw.height0angle25;
+            } else if (angle <= 40) {
+                angleFile = R.raw.height0angle35;
+            } else if (angle <= 50) {
+                angleFile = R.raw.height0angle45;
+            } else if (angle <= 60) {
+                angleFile = R.raw.height0angle55;
+            } else if (angle <= 70) {
+                angleFile = R.raw.height0angle65;
+            } else if (angle <= 80) {
+                angleFile = R.raw.height0angle75;
+            } else {
+                angleFile = R.raw.height0angle85;
+            }
+            //If the height is less than 2, choose a sound file corresponding to height 1 and some angle
+        } else if (height < 2) {
+            if (angle <= -80) {
+                angleFile = R.raw.height1angle_85;
+            } else if (angle <= -70) {
+                angleFile = R.raw.height1angle_75;
+            } else if (angle <= -60) {
+                angleFile = R.raw.height1angle_65;
+            } else if (angle <= -50) {
+                angleFile = R.raw.height1angle_55;
+            } else if (angle <= -40) {
+                angleFile = R.raw.height1angle_45;
+            } else if (angle <= -30) {
+                angleFile = R.raw.height1angle_35;
+            } else if (angle <= -20) {
+                angleFile = R.raw.height1angle_25;
+            } else if (angle <= -10) {
+                angleFile = R.raw.height1angle_15;
+            } else if (angle <= 0) {
+                angleFile = R.raw.height1angle_5;
+            } else if (angle <= 10) {
+                angleFile = R.raw.height1angle5;
+            } else if (angle <= 20) {
+                angleFile = R.raw.height1angle15;
+            } else if (angle <= 30) {
+                angleFile = R.raw.height1angle25;
+            } else if (angle <= 40) {
+                angleFile = R.raw.height1angle35;
+            } else if (angle <= 50) {
+                angleFile = R.raw.height1angle45;
+            } else if (angle <= 60) {
+                angleFile = R.raw.height1angle55;
+            } else if (angle <= 70) {
+                angleFile = R.raw.height1angle65;
+            } else if (angle <= 80) {
+                angleFile = R.raw.height1angle75;
+            } else {
+                angleFile = R.raw.height1angle85;
+            }
+            //If the height is less than 3, choose a sound file corresponding to height 2 and the angle
+        } else if (height < 3) {
+            if (angle <= -80) {
+                angleFile = R.raw.height2angle_85;
+            } else if (angle <= -70) {
+                angleFile = R.raw.height2angle_75;
+            } else if (angle <= -60) {
+                angleFile = R.raw.height2angle_65;
+            } else if (angle <= -50) {
+                angleFile = R.raw.height2angle_55;
+            } else if (angle <= -40) {
+                angleFile = R.raw.height2angle_45;
+            } else if (angle <= -30) {
+                angleFile = R.raw.height2angle_35;
+            } else if (angle <= -20) {
+                angleFile = R.raw.height2angle_25;
+            } else if (angle <= -10) {
+                angleFile = R.raw.height2angle_15;
+            } else if (angle <= 0) {
+                angleFile = R.raw.height2angle_5;
+            } else if (angle <= 10) {
+                angleFile = R.raw.height2angle5;
+            } else if (angle <= 20) {
+                angleFile = R.raw.height2angle15;
+            } else if (angle <= 30) {
+                angleFile = R.raw.height2angle25;
+            } else if (angle <= 40) {
+                angleFile = R.raw.height2angle35;
+            } else if (angle <= 50) {
+                angleFile = R.raw.height2angle45;
+            } else if (angle <= 60) {
+                angleFile = R.raw.height2angle55;
+            } else if (angle <= 70) {
+                angleFile = R.raw.height2angle65;
+            } else if (angle <= 80) {
+                angleFile = R.raw.height2angle75;
+            } else {
+                angleFile = R.raw.height2angle85;
+            }
+            //If the height is less than 4, choose a sound file corresponding to height 3 and the angle
+        } else if (height < 4) {
+            if (angle <= -80) {
+                angleFile = R.raw.height3angle_85;
+            } else if (angle <= -70) {
+                angleFile = R.raw.height3angle_75;
+            } else if (angle <= -60) {
+                angleFile = R.raw.height3angle_65;
+            } else if (angle <= -50) {
+                angleFile = R.raw.height3angle_55;
+            } else if (angle <= -40) {
+                angleFile = R.raw.height3angle_45;
+            } else if (angle <= -30) {
+                angleFile = R.raw.height3angle_35;
+            } else if (angle <= -20) {
+                angleFile = R.raw.height3angle_25;
+            } else if (angle <= -10) {
+                angleFile = R.raw.height3angle_15;
+            } else if (angle <= 0) {
+                angleFile = R.raw.height3angle_5;
+            } else if (angle <= 10) {
+                angleFile = R.raw.height3angle5;
+            } else if (angle <= 20) {
+                angleFile = R.raw.height3angle15;
+            } else if (angle <= 30) {
+                angleFile = R.raw.height3angle25;
+            } else if (angle <= 40) {
+                angleFile = R.raw.height3angle35;
+            } else if (angle <= 50) {
+                angleFile = R.raw.height3angle45;
+            } else if (angle <= 60) {
+                angleFile = R.raw.height3angle55;
+            } else if (angle <= 70) {
+                angleFile = R.raw.height3angle65;
+            } else if (angle <= 80) {
+                angleFile = R.raw.height3angle75;
+            } else {
+                angleFile = R.raw.height3angle85;
+            }
+            //If the height is less than 5, choose a sound file corresponding to height 4 and the angle
+        } else if (height < 5) {
+            if (angle <= -80) {
+                angleFile = R.raw.height4angle_85;
+            } else if (angle <= -70) {
+                angleFile = R.raw.height4angle_75;
+            } else if (angle <= -60) {
+                angleFile = R.raw.height4angle_65;
+            } else if (angle <= -50) {
+                angleFile = R.raw.height4angle_55;
+            } else if (angle <= -40) {
+                angleFile = R.raw.height4angle_45;
+            } else if (angle <= -30) {
+                angleFile = R.raw.height4angle_35;
+            } else if (angle <= -20) {
+                angleFile = R.raw.height4angle_25;
+            } else if (angle <= -10) {
+                angleFile = R.raw.height4angle_15;
+            } else if (angle <= 0) {
+                angleFile = R.raw.height4angle_5;
+            } else if (angle <= 10) {
+                angleFile = R.raw.height4angle5;
+            } else if (angle <= 20) {
+                angleFile = R.raw.height4angle15;
+            } else if (angle <= 30) {
+                angleFile = R.raw.height4angle25;
+            } else if (angle <= 40) {
+                angleFile = R.raw.height4angle35;
+            } else if (angle <= 50) {
+                angleFile = R.raw.height4angle45;
+            } else if (angle <= 60) {
+                angleFile = R.raw.height4angle55;
+            } else if (angle <= 70) {
+                angleFile = R.raw.height4angle65;
+            } else if (angle <= 80) {
+                angleFile = R.raw.height4angle75;
+            } else {
+                angleFile = R.raw.height4angle85;
+            }
+
+            //If the height is less than 6, choose a sound file corresponding to height 5 and the angle
+        } else if (height < 6) {
+            if (angle <= -80) {
+                angleFile = R.raw.height5angle_85;
+            } else if (angle <= -70) {
+                angleFile = R.raw.height5angle_75;
+            } else if (angle <= -60) {
+                angleFile = R.raw.height5angle_65;
+            } else if (angle <= -50) {
+                angleFile = R.raw.height5angle_55;
+            } else if (angle <= -40) {
+                angleFile = R.raw.height5angle_45;
+            } else if (angle <= -30) {
+                angleFile = R.raw.height5angle_35;
+            } else if (angle <= -20) {
+                angleFile = R.raw.height5angle_25;
+            } else if (angle <= -10) {
+                angleFile = R.raw.height5angle_15;
+            } else if (angle <= 0) {
+                angleFile = R.raw.height5angle_5;
+            } else if (angle <= 10) {
+                angleFile = R.raw.height5angle5;
+            } else if (angle <= 20) {
+                angleFile = R.raw.height5angle15;
+            } else if (angle <= 30) {
+                angleFile = R.raw.height5angle25;
+            } else if (angle <= 40) {
+                angleFile = R.raw.height5angle35;
+            } else if (angle <= 50) {
+                angleFile = R.raw.height5angle45;
+            } else if (angle <= 60) {
+                angleFile = R.raw.height5angle55;
+            } else if (angle <= 70) {
+                angleFile = R.raw.height5angle65;
+            } else if (angle <= 80) {
+                angleFile = R.raw.height5angle75;
+            } else {
+                angleFile = R.raw.height5angle85;
+            }
+            //If the height is less than 7, choose a sound file corresponding to height 6 and the angle
+        } else if (height < 7) {
+            if (angle <= -80) {
+                angleFile = R.raw.height6angle_85;
+            } else if (angle <= -70) {
+                angleFile = R.raw.height6angle_75;
+            } else if (angle <= -60) {
+                angleFile = R.raw.height6angle_65;
+            } else if (angle <= -50) {
+                angleFile = R.raw.height6angle_55;
+            } else if (angle <= -40) {
+                angleFile = R.raw.height6angle_45;
+            } else if (angle <= -30) {
+                angleFile = R.raw.height6angle_35;
+            } else if (angle <= -20) {
+                angleFile = R.raw.height6angle_25;
+            } else if (angle <= -10) {
+                angleFile = R.raw.height6angle_15;
+            } else if (angle <= 0) {
+                angleFile = R.raw.height6angle_5;
+            } else if (angle <= 10) {
+                angleFile = R.raw.height6angle5;
+            } else if (angle <= 20) {
+                angleFile = R.raw.height6angle15;
+            } else if (angle <= 30) {
+                angleFile = R.raw.height6angle25;
+            } else if (angle <= 40) {
+                angleFile = R.raw.height6angle35;
+            } else if (angle <= 50) {
+                angleFile = R.raw.height6angle45;
+            } else if (angle <= 60) {
+                angleFile = R.raw.height6angle55;
+            } else if (angle <= 70) {
+                angleFile = R.raw.height6angle65;
+            } else if (angle <= 80) {
+                angleFile = R.raw.height6angle75;
+            } else {
+                angleFile = R.raw.height6angle85;
+            }
+            //Otherwise, choose a sound file corresponding to height 7 and the angle.
+        } else {
+            if (angle <= -80) {
+                angleFile = R.raw.height7angle_85;
+            } else if (angle <= -70) {
+                angleFile = R.raw.height7angle_75;
+            } else if (angle <= -60) {
+                angleFile = R.raw.height7angle_65;
+            } else if (angle <= -50) {
+                angleFile = R.raw.height7angle_55;
+            } else if (angle <= -40) {
+                angleFile = R.raw.height7angle_45;
+            } else if (angle <= -30) {
+                angleFile = R.raw.height7angle_35;
+            } else if (angle <= -20) {
+                angleFile = R.raw.height7angle_25;
+            } else if (angle <= -10) {
+                angleFile = R.raw.height7angle_15;
+            } else if (angle <= 0) {
+                angleFile = R.raw.height7angle_5;
+            } else if (angle <= 10) {
+                angleFile = R.raw.height7angle5;
+            } else if (angle <= 20) {
+                angleFile = R.raw.height7angle15;
+            } else if (angle <= 30) {
+                angleFile = R.raw.height7angle25;
+            } else if (angle <= 40) {
+                angleFile = R.raw.height7angle35;
+            } else if (angle <= 50) {
+                angleFile = R.raw.height7angle45;
+            } else if (angle <= 60) {
+                angleFile = R.raw.height7angle55;
+            } else if (angle <= 70) {
+                angleFile = R.raw.height7angle65;
+            } else if (angle <= 80) {
+                angleFile = R.raw.height7angle75;
+            } else {
+                angleFile = R.raw.height7angle85;
+            }
+        }
+
+        //Return which file to play
+        return angleFile;
+    }
+
+    //Play a sound given the resource
+    //Play a sound given the resource
+    public void playSound(int fileResource) {
+        //If a sound is currently playing, stop it.
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+        }
+        //Set up the media player
+        mediaPlayer = MediaPlayer.create(this.getApplicationContext(), fileResource);
+        //Start playing
+        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                mp.start();
+            }
+        });
+        //Listen for completion
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                //Release the media player on completion
+                mp.release();
+            }
+        });
+
+        //Send a message to repeat the sound file some time later
+        Message msg = Message.obtain();
+        //Msg.what = 1 means that this is to repeat a sound file
+        msg.what = 1;
+        msg.arg1 = fileResource;
+        //Delay sending based on the distance from the object
+        soundHandler.sendMessageDelayed(msg, 800);
+
+    }
 }
 
