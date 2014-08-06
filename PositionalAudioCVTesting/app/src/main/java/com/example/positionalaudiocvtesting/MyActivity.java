@@ -103,8 +103,11 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
                     //The message is from wanting to repeat the last sound played
                 } else if (msg.what == 1 && !soundChanged) {
-                    playSound(currentFile);
-                    lastPlayTime = System.nanoTime();
+                    //So that we don't get stuck repeating two sounds...
+                    if (System.nanoTime() - lastPlayTime > 500000000L) {
+                        playSound(currentFile);
+                        lastPlayTime = System.nanoTime();
+                    }
                 }
             }
         }
@@ -166,10 +169,13 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     public void onPause() {
         //When the app is paused, stop the camera and pause the music
         super.onPause();
-        if (mOpenCvCameraView != null)
+        if (mOpenCvCameraView != null) {
             mOpenCvCameraView.disableView();
-        mediaPlayer.release();
-
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+            }
+        }
     }
 
     @Override
@@ -182,18 +188,19 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     public void onDestroy() {
         //When the app is destroyed, stop the camera and the sounds
         super.onDestroy();
-        if (mOpenCvCameraView != null)
+        if (mOpenCvCameraView != null) {
             mOpenCvCameraView.disableView();
-        mediaPlayer.release();
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+            }
+        }
+
     }
 
     //When a user swipes down to quit, finish the app
     public boolean onKeyDown(int keycode, KeyEvent event) {
         if (keycode == KeyEvent.KEYCODE_BACK) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-            }
-            mediaPlayer.release();
             finish();
         }
         return false;
@@ -269,13 +276,13 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 distance += ((tempDistance / 10) - distance) / smoothing;
 
                 //Calculating angle
-                angle = (76 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 38;
-
+                //angle = (76 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 38;
+                angle = -((180 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 90);
                 double elivAngle = (62 * (largestContourRect.y + largestContourRect.height / 2) / 288.0) - 31;
 
                 //Assuming that the average person is 175 cm
                 //height = 175 - distance*Math.sin(Math.toRadians(elivAngle));
-
+                height = 8 * (1-((largestContourRect.y + largestContourRect.height / 2) / 288.0));
                 //get the current sound file based on angle and height
                 int tempCurrentFile = getSoundFile();
 
