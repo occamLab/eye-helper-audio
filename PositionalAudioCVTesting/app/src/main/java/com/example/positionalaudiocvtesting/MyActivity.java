@@ -1,6 +1,10 @@
 package com.example.positionalaudiocvtesting;
 
 import android.app.Activity;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,7 +32,7 @@ import org.opencv.imgproc.Imgproc;
 import java.util.List;
 
 
-public class MyActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class MyActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener {
     //The Tag for the logcat
     private static final String TAG = "OCVSample::Activity";
     //Are we tracking a color
@@ -70,6 +74,19 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     TextView angleText;
     TextView heightText;
     TextView distanceText;
+    TextView azimuthText;
+    TextView pitchText;
+    TextView rollText;
+
+    //Sensor Data
+    private SensorManager mSensorManager;
+    Sensor accelerometer;
+    Sensor magnetometer;
+    float azimuth = 0.0f;
+    float pitch = 0.0f;
+    float roll = 0.0f;
+    float[] mGravity;
+    float[] mGeomagnetic;
 
     //Initialize the Message Handler
     public Handler soundHandler = new Handler() {
@@ -162,6 +179,14 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         angleText = (TextView) findViewById(R.id.textViewA);
         heightText = (TextView) findViewById(R.id.textViewH);
         distanceText = (TextView) findViewById(R.id.textViewD);
+        azimuthText = (TextView) findViewById(R.id.textViewAzimuth);
+        pitchText = (TextView) findViewById(R.id.textViewPitch);
+        rollText = (TextView) findViewById(R.id.textViewRoll);
+
+        //Sensors! (To get the head tilt information)
+        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
     }
 
@@ -169,6 +194,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     public void onPause() {
         //When the app is paused, stop the camera and pause the music
         super.onPause();
+        mSensorManager.unregisterListener(this);
         if (mOpenCvCameraView != null) {
             mOpenCvCameraView.disableView();
             if (mediaPlayer.isPlaying()) {
@@ -176,6 +202,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 mediaPlayer.release();
             }
         }
+
+
     }
 
     @Override
@@ -183,6 +211,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         //When the app is resumed, restart the camera asynchronously
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
+        mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
     }
 
     public void onDestroy() {
@@ -277,12 +307,15 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
                 //Calculating angle
                 //angle = (76 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 38;
-                angle = -((180 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 90);
+                //angle = -((180 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 90);
+
+
+
                 double elivAngle = (62 * (largestContourRect.y + largestContourRect.height / 2) / 288.0) - 31;
 
                 //Assuming that the average person is 175 cm
                 //height = 175 - distance*Math.sin(Math.toRadians(elivAngle));
-                height = 8 * (1-((largestContourRect.y + largestContourRect.height / 2) / 288.0));
+                height = (3 * (1-((largestContourRect.y + largestContourRect.height / 2) / 288.0)))+ 2;
                 //get the current sound file based on angle and height
                 int tempCurrentFile = getSoundFile();
 
@@ -339,6 +372,10 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 distanceText.setText("Distance: " + String.format("%.1f", distance));
                 angleText.setText("Angle: " + String.format("%.1f", angle));
                 heightText.setText("Height: " + String.format("%.1f", height));
+
+                azimuthText.setText("Azimuth: " + String.format("%.2f", Math.toDegrees(azimuth)));
+                pitchText.setText("Pitch: " + String.format("%.2f", pitch));
+                rollText.setText("Roll: " + String.format("%.2f", Math.toDegrees(roll)));
             }
         });
 
@@ -700,6 +737,27 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         //Delay sending based on the distance from the object
         soundHandler.sendMessageDelayed(msg, 800);
 
+    }
+
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {  }
+
+    public void onSensorChanged(SensorEvent event) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+            mGravity = event.values;
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
+            mGeomagnetic = event.values;
+        if (mGravity != null && mGeomagnetic != null) {
+            float R[] = new float[9];
+            float I[] = new float[9];
+            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            if (success) {
+                float orientation[] = new float[3];
+                SensorManager.getOrientation(R, orientation);
+                azimuth = orientation[0]; // orientation contains: azimut, pitch and roll
+                pitch = orientation[1];
+                roll = orientation[2];
+            }
+        }
     }
 }
 

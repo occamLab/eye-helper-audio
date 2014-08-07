@@ -4,10 +4,6 @@
     android:layout_height="match_parent"
     android:layout_margin="1dp">
 
-    <TableLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"></TableLayout>
-
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -41,6 +37,30 @@
             android:text="Distance"
             android:id="@+id/textViewD"
             android:layout_gravity="right|top" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Azimuth:"
+            android:id="@+id/textViewAzimuth"
+            android:layout_gravity="left|bottom" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Pitch"
+            android:id="@+id/textViewPitch"
+            android:layout_gravity="center_horizontal|bottom" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Roll"
+            android:id="@+id/textViewRoll"
+            android:layout_gravity="right|bottom" />
 
     </FrameLayout>
 
