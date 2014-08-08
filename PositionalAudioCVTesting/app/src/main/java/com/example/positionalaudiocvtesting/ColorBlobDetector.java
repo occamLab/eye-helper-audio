@@ -54,7 +54,7 @@ public class ColorBlobDetector {
         mLowerBound.val[2] = hsvColor.val[2] - mColorRadius.val[2];
         mUpperBound.val[2] = hsvColor.val[2] + mColorRadius.val[2];
 
-        //the min and max range for something else (I'm not sure what)
+        //the min and max range for something else (I'm not sure what) opacity?
         mLowerBound.val[3] = 0;
         mUpperBound.val[3] = 255;
 

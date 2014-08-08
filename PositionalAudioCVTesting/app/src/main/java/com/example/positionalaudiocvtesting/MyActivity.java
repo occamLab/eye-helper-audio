@@ -96,6 +96,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         public void handleMessage(Message msg) {
 
             //We only care about the message if it's telling us to play the most current file
+            //msg.what is the type of message (repeated or  new file)
+            //msg.arg1 is the sound file to play
             if (msg.arg1 == currentFile) {
                 //If this is a message letting us know that the most current file has changed
                 if (msg.what == 0) {
@@ -113,6 +115,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                     //If the time since the last sound is more than 0.5s play the sound now and update last played time
                     } else {
                         playSound(currentFile);
+                        //delete this?
                         soundChanged = false;
                         lastPlayTime = System.nanoTime();
                     }
@@ -154,7 +157,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         }
     };
 
-    //On the constructor for this activity
+    //The constructor for this activity (We might be able to delete this)
     public MyActivity() {
         Log.i(TAG, "Instantiated new " + ((Object) this).getClass());
     }
@@ -307,14 +310,14 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
                 //Calculating angle
                 //angle = (76 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 38;
-                //angle = -((180 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 90);
+                angle = -((180 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 90);
 
 
 
                 double elivAngle = (62 * (largestContourRect.y + largestContourRect.height / 2) / 288.0) - 31;
 
                 //Assuming that the average person is 175 cm
-                //height = 175 - distance*Math.sin(Math.toRadians(elivAngle));
+                //height = 175 - distance**Math.sin(Math.toRadians(elivAngle));
                 height = (3 * (1-((largestContourRect.y + largestContourRect.height / 2) / 288.0)))+ 2;
                 //get the current sound file based on angle and height
                 int tempCurrentFile = getSoundFile();
@@ -739,8 +742,9 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     }
 
+    //When the accuracy of a sensor changes
     public void onAccuracyChanged(Sensor sensor, int accuracy) {  }
-
+    //When the reading of a sensor changes
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
             mGravity = event.values;

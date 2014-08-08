@@ -8,6 +8,7 @@ import struct
 import numpy
 import os
 
+#The base of the file
 fileBaseName = 'Piano'
 
 data = array.array('h') # signed short integer (-32768 to 32767) data
@@ -20,6 +21,7 @@ rightSound = []
 
 headWidth = 0.15
 
+#Make the folder to put the files in
 if not os.path.exists('GeneratedSoundFiles'):
 	os.makedirs('GeneratedSoundFiles')	
 
@@ -36,13 +38,17 @@ for h in range (8):
 	# if not os.path.exists('GeneratedSoundFiles/' + fileBaseName + str(height)):
 	# 	os.makedirs('GeneratedSoundFiles/' + fileBaseName + str(height))	
 
+	#How many sound files we want (Here it's 18)
 	for angleSection in range(18):
+		#The math to shift so they go from -85 degrees to 85 degrees
 		angle = 10 * angleSection - 85
 		soundPosition = (1, angle)
 		speedOfSound = 343
 
+		#So we know where we are in the code
 		print angle
 
+		#The math -- Don't cange this  (unless we determine it is wrong)
 		distanceToLeftEar = math.sqrt((soundPosition[0]*math.cos(math.radians(soundPosition[1])))**2 + (soundPosition[0]*(math.sin(math.radians(soundPosition[1])))-headWidth)**2)
 		samplesToDelayBy = (soundPosition[0] - distanceToLeftEar)/speedOfSound * sampleRate # If delay is positive, delay left, otherwise, delay right
 		delay = numpy.zeros(int(abs(samplesToDelayBy)))
@@ -55,6 +61,7 @@ for h in range (8):
 			rightSound = numpy.concatenate([delay,soundArray])
 		
 		numSamples = rightSound.size
+		#Write the files (underscore means negative)
 		if angle < 0:
 			# f = wave.open('GeneratedSoundFiles/' + fileBaseName + str(height) + '/angle_' + str(abs(angle)) + '.wav', 'w')
 			f = wave.open('GeneratedSoundFiles/height' + str(height) + 'angle_' + str(abs(angle)) + '.wav', 'w')
