@@ -7,8 +7,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.WindowManager;
@@ -45,102 +43,56 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private Mat spectrum;
     //The color of the contours
     private final Scalar CONTOUR_COLOR = new Scalar(255, 0, 0, 255);
-    ;
 
     //Camera Parameters
-    double focal = 2.8;
-    int objWidth = 127;
-    int imgHeight = 512;
-    int sensorHeight = 4;
+    private double focal = 2.8;
+    private int objWidth = 127;
+    private int imgHeight = 512;
+    private int sensorHeight = 4;
 
     //Position Variables
-    double distance = 100;
-    double angle = 0;
-    double height = 0;
+    private double distance = 100;
+    private double angle = 0;
+    private double height = 0;
 
     //Sound Variables
-    MediaPlayer mediaPlayer = new MediaPlayer();
-    long lastPlayTime = System.nanoTime();
-    int currentFile = R.raw.height0angle_85;
-    boolean soundChanged = true;
+    private MediaPlayer mediaPlayer = new MediaPlayer();
+    private int currentFile = R.raw.height0angle_85;
 
+    //Camera View
+    private CameraBridgeViewBase openCvCameraView;
 
     //Text Views
-    TextView angleText;
-    TextView heightText;
-    TextView distanceText;
-    TextView azimuthText;
-    TextView pitchText;
-    TextView rollText;
+    private TextView angleText;
+    private TextView heightText;
+    private TextView distanceText;
+    private TextView azimuthText;
+    private TextView pitchText;
+    private TextView rollText;
 
     //Sensor Data
-    private SensorManager mSensorManager;
-    Sensor accelerometer;
-    Sensor magnetometer;
-    float azimuth = 0.0f;
-    float pitch = 0.0f;
-    float roll = 0.0f;
-    float[] mGravity;
-    float[] mGeomagnetic;
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private Sensor magnetometer;
+    private float azimuth = 0.0f;
+    private float pitch = 0.0f;
+    private float roll = 0.0f;
+    private float[] gravity;
+    private float[] geomagnetic;
 
-    // Initialize the handler for sound feedback
-    public Handler soundHandler = new Handler() {
+    private Thread soundThread;
+    private volatile boolean soundRunning;
 
-        //When the media player gets a message
-        @Override
-        public void handleMessage(Message msg) {
-
-            //We only care about the message if it's telling us to play the most current file
-            //msg.what is the type of message (repeated or  new file)
-            //msg.arg1 is the sound file to play
-            if (msg.arg1 == currentFile) {
-                //If this is a message letting us know that the most current file has changed
-                if (msg.what == 0) {
-                    Log.e(TAG, "Time" + (System.nanoTime() - lastPlayTime));
-                    //If the time since we last played a sound is less than 0.5 seconds try again later
-                    if ((System.nanoTime() - lastPlayTime) < 500000000L) {
-                        Log.e(TAG, "Playing");
-                        //Send a message that has been delayed
-                        Message msgDel = Message.obtain();
-                        //Msg.what = 0 means that this is to play a changed sound file
-                        msgDel.what = 0;
-                        msgDel.arg1 = currentFile;
-                        //Delay sending
-                        soundHandler.sendMessageDelayed(msgDel, 100);
-                    //If the time since the last sound is more than 0.5s play the sound now and update last played time
-                    } else {
-                        playSound(currentFile);
-                        //delete this?
-                        soundChanged = false;
-                        lastPlayTime = System.nanoTime();
-                    }
-
-
-                    //The message is from wanting to repeat the last sound played
-                } else if (msg.what == 1 && !soundChanged) {
-                    //So that we don't get stuck repeating two sounds...
-                    if (System.nanoTime() - lastPlayTime > 500000000L) {
-                        playSound(currentFile);
-                        lastPlayTime = System.nanoTime();
-                    }
-                }
-            }
-        }
-
-    };
-
-    //The camera view
-    private CameraBridgeViewBase mOpenCvCameraView;
     //This is what we use to determine whether or not the app loaded successfully
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+    private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
                 //The app loaded successfully
                 case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV loaded successfully");
-                    mOpenCvCameraView.enableView();
-                    //mOpenCvCameraView.setOnTouchListener(MyActivity.this);
+                    openCvCameraView.enableView();
+                    //openCvCameraView.setOnTouchListener(MyActivity.this);
                 }
                 break;
                 //Otherwise it didn't
@@ -152,15 +104,9 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         }
     };
 
-    //The constructor for this activity (We might be able to delete this)
-    public MyActivity() {
-        Log.i(TAG, "Instantiated new " + ((Object) this).getClass());
-    }
-
     //When the activity is created
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.v(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -168,11 +114,11 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         setContentView(R.layout.color_blob_detection_surface_view);
 
         //Set the camera to appear on the whole screen
-        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
+        openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         //Make this class, which extends CameraVeiwListener the listener
-        mOpenCvCameraView.setCvCameraViewListener(this);
+        openCvCameraView.setCvCameraViewListener(this);
 
-        //Display the angle, height, and distance on the sceen on the glass
+        //Display the angle, height, and distance on the screen on the glass
         angleText = (TextView) findViewById(R.id.textViewA);
         heightText = (TextView) findViewById(R.id.textViewH);
         distanceText = (TextView) findViewById(R.id.textViewD);
@@ -181,49 +127,58 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         rollText = (TextView) findViewById(R.id.textViewRoll);
 
         //Sensors! (To get the head tilt information)
-        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
     }
 
     @Override
     public void onPause() {
         //When the app is paused, stop the camera and pause the music
-        super.onPause();
-        mSensorManager.unregisterListener(this);
-        if (mOpenCvCameraView != null) {
-            mOpenCvCameraView.disableView();
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-                mediaPlayer.release();
-            }
+        sensorManager.unregisterListener(this);
+        if (openCvCameraView != null) {
+            openCvCameraView.disableView();
         }
+        stopSoundThread();
+//        if (mediaPlayer.isPlaying()) {
+//            mediaPlayer.stop();
+//            mediaPlayer.release();
+//        }
+        super.onPause();
+    }
 
-
+    private void stopSoundThread() {
+        soundRunning = false;
     }
 
     @Override
     public void onResume() {
         //When the app is resumed, restart the camera asynchronously
+        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, loaderCallback);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+        sensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
+        startSoundThread();
         super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
-        mSensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
-        mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
     }
 
-    @Override
-    public void onDestroy() {
-        //When the app is destroyed, stop the camera and the sounds
-        super.onDestroy();
-        if (mOpenCvCameraView != null) {
-            mOpenCvCameraView.disableView();
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-                mediaPlayer.release();
-            }
-        }
+    private void startSoundThread() {
+        soundRunning = true;
+        soundThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (soundRunning) {
+                    try {
+                        Thread.sleep(500);
+                        playSound();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
+                }
+            }
+        });
+        soundThread.run();
     }
 
     //When a user swipes down to quit, finish the app
@@ -317,14 +272,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
                 //if this isn't the sound file we are playing
                 if (tempCurrentFile != currentFile) {
-                    //Send a message to play a different file
-                    Message msg = Message.obtain();
-                    msg.what = 0;
-                    msg.arg1 = tempCurrentFile;
-                    //set currentFile
                     currentFile = tempCurrentFile;
-                    soundChanged = true;
-                    soundHandler.sendMessage(msg);
                 }
 
 //                Log.e(TAG, "Distance: " + distance);
@@ -702,20 +650,15 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     }
 
     //Play a sound given the resource
-    public void playSound(int fileResource) {
+    public void playSound() {
         //If a sound is currently playing, stop it.
         if (mediaPlayer != null) {
             mediaPlayer.release();
         }
         //Set up the media player
-        mediaPlayer = MediaPlayer.create(this.getApplicationContext(), fileResource);
-        //Start playing once prepared
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                mp.start();
-            }
-        });
+        mediaPlayer = MediaPlayer.create(this.getApplicationContext(), currentFile);
+        mediaPlayer.start();
+
         //Listen for completion
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -724,15 +667,6 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 mp.release();
             }
         });
-
-        //Send a message to repeat the sound file some time later
-        Message msg = Message.obtain();
-        //Msg.what = 1 means that this is to repeat a sound file
-        msg.what = 1;
-        msg.arg1 = fileResource;
-        //Delay sending based on the distance from the object
-        soundHandler.sendMessageDelayed(msg, 800);
-
     }
 
     //When the accuracy of a sensor changes
@@ -743,13 +677,13 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
-            mGravity = event.values;
+            gravity = event.values;
         if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD)
-            mGeomagnetic = event.values;
-        if (mGravity != null && mGeomagnetic != null) {
+            geomagnetic = event.values;
+        if (gravity != null && geomagnetic != null) {
             float R[] = new float[9];
             float I[] = new float[9];
-            boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+            boolean success = SensorManager.getRotationMatrix(R, I, gravity, geomagnetic);
             if (success) {
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(R, orientation);
