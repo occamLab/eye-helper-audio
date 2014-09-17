@@ -11,7 +11,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
@@ -26,7 +25,6 @@ import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.List;
@@ -36,21 +34,18 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     //The Tag for the logcat
     private static final String TAG = "OCVSample::Activity";
     //Are we tracking a color
-    private boolean mIsColorSelected = false;
+    private boolean isColorSelected = false;
     //The matrix of the image in rgba
-    private Mat mRgba;
+    private Mat rgba;
     //the color blob rgba (4 values)
-    private Scalar mBlobColorRgba;
-    //The HSV value of the color we are tracking
-    private Scalar mBlobColorHsv;
+    private Scalar blobColorRgba;
     //The color blob detector
-    private ColorBlobDetector mDetector;
+    private ColorBlobDetector detector;
     //The color spectrum of the image
-    private Mat mSpectrum;
-    //The size of the spectrum
-    private Size SPECTRUM_SIZE;
+    private Mat spectrum;
     //The color of the contours
-    private Scalar CONTOUR_COLOR;
+    private final Scalar CONTOUR_COLOR = new Scalar(255, 0, 0, 255);
+    ;
 
     //Camera Parameters
     double focal = 2.8;
@@ -167,8 +162,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     public void onCreate(Bundle savedInstanceState) {
         Log.v(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
-        //Set up the layout to fill the whole screen
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.color_blob_detection_surface_view);
@@ -245,47 +239,41 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     @Override
     public void onCameraViewStarted(int width, int height) {
         //Declare the image matrix to be a matrix of the height and width of the image
-        mRgba = new Mat(height, width, CvType.CV_8UC4);
+        rgba = new Mat(height, width, CvType.CV_8UC4);
         //Make a new detector
-        mDetector = new ColorBlobDetector();
+        detector = new ColorBlobDetector();
         //Declare the spectrum, but don't put anything into it yet
-        mSpectrum = new Mat();
+        spectrum = new Mat();
         //the Rgba is 255
-        mBlobColorRgba = new Scalar(255);
-        //The HSV is 255
-        mBlobColorHsv = new Scalar(255);
-        //The spectrum is 200 x 64
-        SPECTRUM_SIZE = new Size(200, 64);
-        //The contour color, declared as red
-        CONTOUR_COLOR = new Scalar(255, 0, 0, 255);
+        blobColorRgba = new Scalar(255);
         //We are tracking a color
-        mIsColorSelected = true;
+        isColorSelected = true;
         //Tracking the color black
-        mDetector.setHsvColor(new Scalar(130, 25, 55, 0));
+        detector.setHsvColor(new Scalar(130, 25, 55, 0));
     }
 
     //when the camera view stops
     @Override
     public void onCameraViewStopped() {
         //When the camera view stops, release the camera
-        mRgba.release();
+        rgba.release();
     }
 
     //Every time we get a new camera frame
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         //the image matrix is the input frame converted to RGBa
-        mRgba = inputFrame.rgba();
-        //Log.e(TAG, "Size " + mRgba.size());
+        rgba = inputFrame.rgba();
+        //Log.e(TAG, "Size " + rgba.size());
         //if we are tracking a color
-        if (mIsColorSelected) {
+        if (isColorSelected) {
             //process the color
-            mDetector.process(mRgba);
+            detector.process(rgba);
             //get the contours from that color
-            List<MatOfPoint> contours = mDetector.getContours();
+            List<MatOfPoint> contours = detector.getContours();
             //Log.e(TAG, "Contours count: " + contours.size());
             //Draw the contours
-            //Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
+            //Imgproc.drawContours(rgba, contours, -1, CONTOUR_COLOR);
 
             //For each set of contours, draw a rectangle
             if (contours.size() > 0) {
@@ -302,7 +290,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
                 Point p2 = new Point(largestContourRect.x + largestContourRect.width, largestContourRect.y + largestContourRect.height);
 
-                Core.rectangle(mRgba, p1, p2, CONTOUR_COLOR, 1);
+                Core.rectangle(rgba, p1, p2, CONTOUR_COLOR, 1);
                 //Log.e(TAG, "Width: " + largestContourRect.width + " Height: " + largestContourRect.height);
                 //Log.e(TAG, "X: " + largestContourRect.x + " Y: " + largestContourRect.y);
                 //distance in mm
@@ -349,16 +337,16 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
             }
             //Define the color label
-            Mat colorLabel = mRgba.submat(4, 68, 4, 68);
+            Mat colorLabel = rgba.submat(4, 68, 4, 68);
             //set the color label to the blob's average RGBa
-            colorLabel.setTo(mBlobColorRgba);
+            colorLabel.setTo(blobColorRgba);
             //Update the spectrum label
-            Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
-            mSpectrum.copyTo(spectrumLabel);
+            Mat spectrumLabel = rgba.submat(4, 4 + spectrum.rows(), 70, 70 + spectrum.cols());
+            spectrum.copyTo(spectrumLabel);
         }
 
         //Return the RGBa for the image
-        return mRgba;
+        return rgba;
     }
 
     //Convert a scalar HSV to RGBa
