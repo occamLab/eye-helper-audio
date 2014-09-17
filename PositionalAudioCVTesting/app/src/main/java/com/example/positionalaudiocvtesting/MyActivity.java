@@ -88,7 +88,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     float[] mGravity;
     float[] mGeomagnetic;
 
-    //Initialize the Message Handler
+    // Initialize the handler for sound feedback
     public Handler soundHandler = new Handler() {
 
         //When the media player gets a message
@@ -165,7 +165,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     //When the activity is created
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        Log.i(TAG, "called onCreate");
+        Log.v(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
         //Set up the layout to fill the whole screen
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -218,6 +218,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         mSensorManager.registerListener(this, magnetometer, SensorManager.SENSOR_DELAY_UI);
     }
 
+    @Override
     public void onDestroy() {
         //When the app is destroyed, stop the camera and the sounds
         super.onDestroy();
@@ -232,6 +233,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     }
 
     //When a user swipes down to quit, finish the app
+    @Override
     public boolean onKeyDown(int keycode, KeyEvent event) {
         if (keycode == KeyEvent.KEYCODE_BACK) {
             finish();
@@ -240,6 +242,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     }
 
     //Right after the camera starts
+    @Override
     public void onCameraViewStarted(int width, int height) {
         //Declare the image matrix to be a matrix of the height and width of the image
         mRgba = new Mat(height, width, CvType.CV_8UC4);
@@ -262,12 +265,14 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     }
 
     //when the camera view stops
+    @Override
     public void onCameraViewStopped() {
         //When the camera view stops, release the camera
         mRgba.release();
     }
 
     //Every time we get a new camera frame
+    @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         //the image matrix is the input frame converted to RGBa
         mRgba = inputFrame.rgba();
@@ -743,8 +748,11 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     }
 
     //When the accuracy of a sensor changes
+    @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {  }
+
     //When the reading of a sensor changes
+    @Override
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
             mGravity = event.values;

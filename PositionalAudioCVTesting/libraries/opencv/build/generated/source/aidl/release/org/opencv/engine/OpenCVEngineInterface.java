@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/PositionalAudioCVTesting/libraries/opencv/src/org/opencv/engine/OpenCVEngineInterface.aidl
+ * Original file: /home/greenteawarrior/eye-helper-audio/PositionalAudioCVTesting/libraries/opencv/src/org/opencv/engine/OpenCVEngineInterface.aidl
  */
 package org.opencv.engine;
 /**
