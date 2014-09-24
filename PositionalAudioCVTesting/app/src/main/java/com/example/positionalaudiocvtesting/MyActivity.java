@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -16,15 +17,19 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfDMatch;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.features2d.DMatch;
+import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.DescriptorMatcher;
+import org.opencv.features2d.FeatureDetector;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -82,6 +87,10 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     private Thread soundThread;
     private volatile boolean soundRunning;
+
+    private Pair<Point, Point> coordinates;
+    private MatOfKeyPoint trainingImageKeypoints;
+    private Mat trainingImageDescriptors;
 
     //This is what we use to determine whether or not the app loaded successfully
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
@@ -206,86 +215,41 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         rgba.release();
     }
 
+    private void setTrainingArea(Pair<Point, Point> coordinates) {
+        this.coordinates = coordinates;
+    }
+    
     //Every time we get a new camera frame
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        //the image matrix is the input frame converted to RGBa
-        rgba = inputFrame.rgba();
-        //Log.e(TAG, "Size " + rgba.size());
-        //if we are tracking a color
-        if (isColorSelected) {
-            //process the color
-            detector.process(rgba);
-            //get the contours from that color
-            List<MatOfPoint> contours = detector.getContours();
-            //Log.e(TAG, "Contours count: " + contours.size());
-            //Draw the contours
-            //Imgproc.drawContours(rgba, contours, -1, CONTOUR_COLOR);
+        matchObject(inputFrame.gray());
+        return inputFrame.rgba();
+    }
 
-            //For each set of contours, draw a rectangle
-            if (contours.size() > 0) {
-                Rect largestContourRect = Imgproc.boundingRect(contours.get(0));
+    private void matchObject(Mat image) {
+        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
+        MatOfKeyPoint keypoints = detectKeypoints(image);
+        Mat descriptors = computeDescriptors(image, keypoints);
+        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
+        List<MatOfDMatch> matchMatrices = new ArrayList<MatOfDMatch>();
+        matcher.knnMatch(trainingImageDescriptors, descriptors, matchMatrices, 2);
 
-                for (int i = 0; i < contours.size(); i++) {
-                    Rect bounding = Imgproc.boundingRect(contours.get(i));
-                    if (bounding.area() > largestContourRect.area()) {
-                        largestContourRect = bounding;
-                    }
-                }
-
-                Point p1 = new Point(largestContourRect.x, largestContourRect.y);
-
-                Point p2 = new Point(largestContourRect.x + largestContourRect.width, largestContourRect.y + largestContourRect.height);
-
-                Core.rectangle(rgba, p1, p2, CONTOUR_COLOR, 1);
-                //Log.e(TAG, "Width: " + largestContourRect.width + " Height: " + largestContourRect.height);
-                //Log.e(TAG, "X: " + largestContourRect.x + " Y: " + largestContourRect.y);
-                //distance in mm
-
-
-                double tempDistance = (focal * objWidth * imgHeight) / (largestContourRect.width * sensorHeight);
-                //Smoothing the distance signal
-                double smoothing = 10.0;
-                distance += ((tempDistance / 10) - distance) / smoothing;
-
-                //Calculating angle
-                //angle = (76 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 38;
-                angle = -((180 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 90);
-
-
-                double elivAngle = (62 * (largestContourRect.y + largestContourRect.height / 2) / 288.0) - 31;
-
-                //Assuming that the average person is 175 cm
-                //height = 175 - distance**Math.sin(Math.toRadians(elivAngle));
-                height = (3 * (1 - ((largestContourRect.y + largestContourRect.height / 2) / 288.0))) + 2;
-                //get the current sound file based on angle and height
-                int tempCurrentFile = getSoundFile();
-
-                //if this isn't the sound file we are playing
-                if (tempCurrentFile != currentFile) {
-                    currentFile = tempCurrentFile;
-                }
-
-//                Log.e(TAG, "Distance: " + distance);
-//                Log.e(TAG, "Angle: " + angle);
-//                Log.e(TAG, "Height: " + height);
-
-                // Update Distance, Height, and Angle
-                updateText();
-
-
+        // Filter out the outliers
+        List<MatOfDMatch> goodMatches = new ArrayList<MatOfDMatch>();
+        for (MatOfDMatch matchMatrix : matchMatrices) {
+            List<DMatch> matches = matchMatrix.toList();
+            DMatch m = matches.get(0);
+            DMatch n = matches.get(1);
+            if (m.distance < 0.75 * n.distance) {
+                goodMatches.add(matchMatrix);
             }
-            //Define the color label
-            Mat colorLabel = rgba.submat(4, 68, 4, 68);
-            //set the color label to the blob's average RGBa
-            colorLabel.setTo(blobColorRgba);
-            //Update the spectrum label
-            Mat spectrumLabel = rgba.submat(4, 4 + spectrum.rows(), 70, 70 + spectrum.cols());
-            spectrum.copyTo(spectrumLabel);
         }
 
-        //Return the RGBa for the image
-        return rgba;
+        meanShift(goodMatches, 10);
+    }
+
+    private void meanShift(List<MatOfDMatch> goodMatches, int threshold) {
+
     }
 
     //Convert a scalar HSV to RGBa
@@ -684,6 +648,20 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 roll = orientation[2];
             }
         }
+    }
+
+    private MatOfKeyPoint detectKeypoints(Mat img) {
+        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
+        MatOfKeyPoint keypoints = new MatOfKeyPoint();
+        detector.detect(img, keypoints);
+        return keypoints;
+    }
+
+    private Mat computeDescriptors(Mat img, MatOfKeyPoint keypoints) {
+        DescriptorExtractor descriptor = DescriptorExtractor.create(DescriptorExtractor.SIFT);
+        Mat descriptors = new Mat();
+        descriptor.compute(img, keypoints, descriptors);
+        return descriptors;
     }
 }
 
