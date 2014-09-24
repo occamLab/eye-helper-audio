@@ -178,7 +178,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 }
             }
         });
-        soundThread.run();
+        soundThread.start();
     }
 
     //When a user swipes down to quit, finish the app
