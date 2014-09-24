@@ -140,16 +140,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         if (openCvCameraView != null) {
             openCvCameraView.disableView();
         }
-        stopSoundThread();
-//        if (mediaPlayer.isPlaying()) {
-//            mediaPlayer.stop();
-//            mediaPlayer.release();
-//        }
-        super.onPause();
-    }
-
-    private void stopSoundThread() {
         soundRunning = false;
+        super.onPause();
     }
 
     @Override
@@ -261,12 +253,11 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 angle = -((180 * (largestContourRect.x + largestContourRect.width / 2) / 512.0) - 90);
 
 
-
                 double elivAngle = (62 * (largestContourRect.y + largestContourRect.height / 2) / 288.0) - 31;
 
                 //Assuming that the average person is 175 cm
                 //height = 175 - distance**Math.sin(Math.toRadians(elivAngle));
-                height = (3 * (1-((largestContourRect.y + largestContourRect.height / 2) / 288.0)))+ 2;
+                height = (3 * (1 - ((largestContourRect.y + largestContourRect.height / 2) / 288.0))) + 2;
                 //get the current sound file based on angle and height
                 int tempCurrentFile = getSoundFile();
 
@@ -671,7 +662,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     //When the accuracy of a sensor changes
     @Override
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {  }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+    }
 
     //When the reading of a sensor changes
     @Override
