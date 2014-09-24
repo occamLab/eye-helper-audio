@@ -223,11 +223,11 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
             //Imgproc.drawContours(rgba, contours, -1, CONTOUR_COLOR);
 
             //For each set of contours, draw a rectangle
-            if (contours.size() > 0) {
+            if (!contours.isEmpty()) {
                 Rect largestContourRect = Imgproc.boundingRect(contours.get(0));
 
-                for (int i = 0; i < contours.size(); i++) {
-                    Rect bounding = Imgproc.boundingRect(contours.get(i));
+                for (MatOfPoint contour : contours) {
+                    Rect bounding = Imgproc.boundingRect(contour);
                     if (bounding.area() > largestContourRect.area()) {
                         largestContourRect = bounding;
                     }
@@ -259,12 +259,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 //height = 175 - distance**Math.sin(Math.toRadians(elivAngle));
                 height = (3 * (1 - ((largestContourRect.y + largestContourRect.height / 2) / 288.0))) + 2;
                 //get the current sound file based on angle and height
-                int tempCurrentFile = getSoundFile();
-
-                //if this isn't the sound file we are playing
-                if (tempCurrentFile != currentFile) {
-                    currentFile = tempCurrentFile;
-                }
+                currentFile = getSoundFile();
 
 //                Log.e(TAG, "Distance: " + distance);
 //                Log.e(TAG, "Angle: " + angle);
@@ -272,8 +267,6 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
                 // Update Distance, Height, and Angle
                 updateText();
-
-
             }
             //Define the color label
             Mat colorLabel = rgba.submat(4, 68, 4, 68);
