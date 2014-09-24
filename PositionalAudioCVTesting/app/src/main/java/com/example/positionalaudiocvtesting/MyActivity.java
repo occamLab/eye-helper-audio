@@ -281,15 +281,6 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         return rgba;
     }
 
-    //Convert a scalar HSV to RGBa
-    private Scalar converScalarHsv2Rgba(Scalar hsvColor) {
-        Mat pointMatRgba = new Mat();
-        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
-        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
-
-        return new Scalar(pointMatRgba.get(0, 0));
-    }
-
     //Update text on the glass's display
     public void updateText() {
         //In order to update UI elements, we have to run on the UI thread
