@@ -9,7 +9,10 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Pair;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
@@ -128,6 +131,14 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
         //Make this class, which extends CameraVeiwListener the listener
         openCvCameraView.setCvCameraViewListener(this);
+        final GestureDetector gestureDetector = new GestureDetector(this, new TapDetector());
+        openCvCameraView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                gestureDetector.onTouchEvent(event);
+                return true;
+            }
+        });
 
         //Display the angle, height, and distance on the screen on the glass
         angleText = (TextView) findViewById(R.id.textViewA);
@@ -144,7 +155,14 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     }
 
-    @Override
+    class TapDetector extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            Log.v(TAG, String.format("x: %f, y: %f", e.getX(), e.getY()));
+            return super.onSingleTapUp(e);
+        }
+    }
+
     public void onPause() {
         //When the app is paused, stop the camera and pause the music
         sensorManager.unregisterListener(this);
