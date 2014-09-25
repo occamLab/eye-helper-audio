@@ -8,7 +8,6 @@ import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.Pair;
 import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -22,37 +21,13 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDMatch;
-import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.Point;
-import org.opencv.core.Scalar;
-import org.opencv.features2d.DMatch;
-import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.DescriptorMatcher;
-import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.KeyPoint;
-import org.opencv.imgproc.Imgproc;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 
 public class MyActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener {
-    //The Tag for the logcat
     private static final String TAG = "OCVSample::Activity";
-    //Are we tracking a color
-    private boolean isColorSelected = false;
+
     //The matrix of the image in rgba
     private Mat rgba;
-    //the color blob rgba (4 values)
-    private Scalar blobColorRgba;
-    //The color blob detector
-    private ColorBlobDetector detector;
-    //The color spectrum of the image
-    private Mat spectrum;
-    //The color of the contours
-    private final Scalar CONTOUR_COLOR = new Scalar(255, 0, 0, 255);
 
     //Camera Parameters
     private double focal = 2.8;
@@ -90,12 +65,9 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private float[] gravity;
     private float[] geomagnetic;
 
-    private Thread soundThread;
     private volatile boolean soundRunning;
 
-    private Pair<Point, Point> coordinates;
-    private MatOfKeyPoint trainingImageKeypoints;
-    private Mat trainingImageDescriptors;
+    private ObjectTracker objectTracker;
 
     //This is what we use to determine whether or not the app loaded successfully
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
@@ -155,14 +127,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     }
 
-    class TapDetector extends GestureDetector.SimpleOnGestureListener {
-        @Override
-        public boolean onSingleTapUp(MotionEvent e) {
-            Log.v(TAG, String.format("x: %f, y: %f", e.getX(), e.getY()));
-            return super.onSingleTapUp(e);
-        }
-    }
-
+    @Override
     public void onPause() {
         //When the app is paused, stop the camera and pause the music
         sensorManager.unregisterListener(this);
@@ -185,7 +150,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     private void startSoundThread() {
         soundRunning = true;
-        soundThread = new Thread(new Runnable() {
+        Thread soundThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (soundRunning) {
@@ -216,16 +181,6 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     public void onCameraViewStarted(int width, int height) {
         //Declare the image matrix to be a matrix of the height and width of the image
         rgba = new Mat(height, width, CvType.CV_8UC4);
-        //Make a new detector
-        detector = new ColorBlobDetector();
-        //Declare the spectrum, but don't put anything into it yet
-        spectrum = new Mat();
-        //the Rgba is 255
-        blobColorRgba = new Scalar(255);
-        //We are tracking a color
-        isColorSelected = true;
-        //Tracking the color black
-        detector.setHsvColor(new Scalar(130, 25, 55, 0));
     }
 
     //when the camera view stops
@@ -234,159 +189,14 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         //When the camera view stops, release the camera
         rgba.release();
     }
-
-    private Mat getTrainingImage(Pair<Point, Point> coordinates) {
-        // TODO: get the training image based on coordinates
-        return new Mat();
-    }
-
-    private void setTrainingArea(Pair<Point, Point> coordinates) {
-        Mat trainingImage = getTrainingImage(coordinates);
-        this.trainingImageKeypoints = detectKeypoints(trainingImage);
-        this.trainingImageDescriptors = computeDescriptors(trainingImage, trainingImageKeypoints);
-        this.coordinates = coordinates;
-    }
     
     //Every time we get a new camera frame
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        if (coordinates != null) {
-            matchObject(inputFrame.gray());
+        if (objectTracker != null) {
+            objectTracker.matchObject(inputFrame.gray());
         }
         return inputFrame.rgba();
-    }
-
-    private void matchObject(Mat image) {
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
-        MatOfKeyPoint keypoints = detectKeypoints(image);
-        KeyPoint[] keypointsArray = keypoints.toArray();
-        Mat descriptors = computeDescriptors(image, keypoints);
-        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
-        List<MatOfDMatch> matchMatrices = new ArrayList<MatOfDMatch>();
-        matcher.knnMatch(trainingImageDescriptors, descriptors, matchMatrices, 2);
-
-        // Filter out the outliers
-        List<Point> goodMatches = new ArrayList<Point>();
-        for (MatOfDMatch matchMatrix : matchMatrices) {
-            // TODO: make sure we are getting the correct m and n
-            List<DMatch> matches = matchMatrix.toList();
-
-            DMatch m = matches.get(0);
-            DMatch n = matches.get(1);
-
-            if (m.distance < 0.75 * n.distance) {
-                double x = keypointsArray[m.trainIdx].pt.x;
-                double y = keypointsArray[m.trainIdx].pt.y;
-                goodMatches.add(new Point(x, y));
-            }
-        }
-
-        meanShift(goodMatches, 10);
-    }
-
-    private Point meanShift(List<Point> keypoints, double threshold) {
-        Point hypothesis = getCenter();
-
-        // need more than one keypoint to update hypothesis
-        if (keypoints.size() <= 1) {
-            return hypothesis;
-        }
-
-        // assigns a value to the weighting constant -> based on
-        // experimental results on cropped cookie_00274
-        double c = 0.0001;
-
-        // arbitrarily set diff high to go through loop at least once
-        double diff = 1000;
-
-        while (diff > threshold) {
-
-            // sets up lists of weights and weights*position
-            // TODO: should these be doubles or ints or floats?
-            List<Double> x_weights = new ArrayList<Double>();
-            List<Double> y_weights = new ArrayList<Double>();
-            List<Double> weighted_x = new ArrayList<Double>();
-            List<Double> weighted_y = new ArrayList<Double>();
-
-            // Creates a list of weighted points, where points near the
-            // hypothesis have a larger weight
-
-            Point last_guess = hypothesis;
-
-            for (Point keypoint : keypoints) {
-                double x_val = Math.exp(-c * Math.pow((keypoint.x - last_guess.x), 2));
-                x_weights.add(x_val);
-                weighted_x.add(x_val * keypoint.x);
-                double y_val = Math.exp(-c * Math.pow((keypoint.y - last_guess.y), 2));
-                y_weights.add(y_val);
-                weighted_y.add(y_val * keypoint.y);
-            }
-
-            // TODO: should x, y be floats, ints, or doubles?
-            // finds 'center of mass' of the points to determine new center
-            double x = sum(weighted_x) / sum(x_weights);
-            double y = sum(weighted_y) / sum(y_weights);
-
-            // update hypothesis
-            hypothesis = new Point(x, y);
-
-            // difference between the current and last guess
-            diff = Math.sqrt(Math.pow((last_guess.x - x), 2) + Math.pow((last_guess.y - y), 2));
-
-            //  Finding the radius:
-            List<Double> norm_weights = new ArrayList<Double>();
-            for (int i = 0; i < x_weights.size(); i++) {
-                norm_weights.add(norm(new Point(x_weights.get(i), y_weights.get(i))));
-            }
-
-            double avg_weight = sum(norm_weights) / norm_weights.size();
-
-            // TODO: get standard deviation using java
-            // double std_weight = Math.std(norm_weights);
-
-            //  Threshold based on standard deviations (to account for different kp density scenarios)
-            threshold = avg_weight; // - .25*std_weight
-            List<Double> inliers = new ArrayList<Double>();
-
-            //  Radius corresponds to the farthest-away keypoints are in the threshold from center of mass (x,y)
-            for (int index = 0; index < norm_weights.size(); index++) {
-                if (norm_weights.get(index) > threshold) {
-                    Point inliearCoordinates = new Point(keypoints.get(index).x - x, keypoints.get(index).y - y);
-                    inliers.add(norm(inliearCoordinates));
-                }
-            }
-
-            // TODO: why do we need radius?
-            double radius = Collections.max(inliers);
-        }
-        return hypothesis;
-    }
-
-    private double norm(Point point) {
-        return Math.sqrt(Math.pow(point.x, 2) + Math.pow(point.y, 2));
-    }
-
-    private double sum(List<Double> list) {
-        double sum = 0;
-        for (double number : list) {
-            sum += number;
-        }
-        return sum;
-    }
-
-    private Point getCenter() {
-        double x = (coordinates.first.x + coordinates.second.x) / 2;
-        double y = (coordinates.first.y + coordinates.second.y) / 2;
-        return new Point(x, y);
-    }
-
-    //Convert a scalar HSV to RGBa
-    private Scalar converScalarHsv2Rgba(Scalar hsvColor) {
-        Mat pointMatRgba = new Mat();
-        Mat pointMatHsv = new Mat(1, 1, CvType.CV_8UC3, hsvColor);
-        Imgproc.cvtColor(pointMatHsv, pointMatRgba, Imgproc.COLOR_HSV2RGB_FULL, 4);
-
-        return new Scalar(pointMatRgba.get(0, 0));
     }
 
     //Update text on the glass's display
@@ -771,25 +581,19 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
             if (success) {
                 float orientation[] = new float[3];
                 SensorManager.getOrientation(R, orientation);
-                azimuth = orientation[0]; // orientation contains: azimut, pitch and roll
+                azimuth = orientation[0]; // orientation contains: azimuth, pitch and roll
                 pitch = orientation[1];
                 roll = orientation[2];
             }
         }
     }
 
-    private MatOfKeyPoint detectKeypoints(Mat img) {
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
-        MatOfKeyPoint keypoints = new MatOfKeyPoint();
-        detector.detect(img, keypoints);
-        return keypoints;
-    }
-
-    private Mat computeDescriptors(Mat img, MatOfKeyPoint keypoints) {
-        DescriptorExtractor descriptor = DescriptorExtractor.create(DescriptorExtractor.SIFT);
-        Mat descriptors = new Mat();
-        descriptor.compute(img, keypoints, descriptors);
-        return descriptors;
+    class TapDetector extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            Log.v(TAG, String.format("x: %f, y: %f", e.getX(), e.getY()));
+            return super.onSingleTapUp(e);
+        }
     }
 }
 
