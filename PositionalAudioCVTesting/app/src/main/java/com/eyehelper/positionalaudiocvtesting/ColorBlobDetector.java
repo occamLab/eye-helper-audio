@@ -1,4 +1,4 @@
-package com.example.positionalaudiocvtesting;
+package com.eyehelper.positionalaudiocvtesting;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;

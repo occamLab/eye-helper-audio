@@ -1,4 +1,4 @@
-package com.example.positionalaudiocvtesting;
+package com.eyehelper.positionalaudiocvtesting;
 
 import android.app.Activity;
 import android.hardware.Sensor;
