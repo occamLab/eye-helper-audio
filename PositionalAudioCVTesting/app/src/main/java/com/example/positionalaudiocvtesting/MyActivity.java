@@ -27,6 +27,9 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.List;
 
+import butterknife.ButterKnife;
+import butterknife.InjectView;
+
 
 public class MyActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener {
     //The Tag for the logcat
@@ -60,15 +63,22 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private int currentFile = R.raw.height0angle_85;
 
     //Camera View
-    private CameraBridgeViewBase openCvCameraView;
+    @InjectView(R.id.camera_view)
+    CameraBridgeViewBase openCvCameraView;
 
     //Text Views
-    private TextView angleText;
-    private TextView heightText;
-    private TextView distanceText;
-    private TextView azimuthText;
-    private TextView pitchText;
-    private TextView rollText;
+    @InjectView(R.id.text_view_angle)
+    TextView angleText;
+    @InjectView(R.id.text_view_height)
+    TextView heightText;
+    @InjectView(R.id.text_view_distance)
+    TextView distanceText;
+    @InjectView(R.id.text_view_azimuth)
+    TextView azimuthText;
+    @InjectView(R.id.text_view_pitch)
+    TextView pitchText;
+    @InjectView(R.id.text_view_roll)
+    TextView rollText;
 
     //Sensor Data
     private SensorManager sensorManager;
@@ -80,7 +90,6 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private float[] gravity;
     private float[] geomagnetic;
 
-    private Thread soundThread;
     private volatile boolean soundRunning;
 
     //This is what we use to determine whether or not the app loaded successfully
@@ -108,29 +117,17 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         setContentView(R.layout.color_blob_detection_surface_view);
+        ButterKnife.inject(this);
 
-        //Set the camera to appear on the whole screen
-        openCvCameraView = (CameraBridgeViewBase) findViewById(R.id.color_blob_detection_activity_surface_view);
-        //Make this class, which extends CameraVeiwListener the listener
-        openCvCameraView.setCvCameraViewListener(this);
-
-        //Display the angle, height, and distance on the screen on the glass
-        angleText = (TextView) findViewById(R.id.textViewA);
-        heightText = (TextView) findViewById(R.id.textViewH);
-        distanceText = (TextView) findViewById(R.id.textViewD);
-        azimuthText = (TextView) findViewById(R.id.textViewAzimuth);
-        pitchText = (TextView) findViewById(R.id.textViewPitch);
-        rollText = (TextView) findViewById(R.id.textViewRoll);
-
-        //Sensors! (To get the head tilt information)
+        // Sensors! (To get the head tilt information)
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
+        // Make this activity the listener for our camera view
+        openCvCameraView.setCvCameraViewListener(this);
     }
 
     @Override
@@ -156,7 +153,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     private void startSoundThread() {
         soundRunning = true;
-        soundThread = new Thread(new Runnable() {
+        Thread soundThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 while (soundRunning) {
