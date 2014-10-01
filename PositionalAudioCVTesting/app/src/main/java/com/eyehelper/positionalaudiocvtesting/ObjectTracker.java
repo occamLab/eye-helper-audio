@@ -1,16 +1,13 @@
 package com.eyehelper.positionalaudiocvtesting;
 
+import android.util.Log;
 import android.util.Pair;
 
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
-import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.KeyPoint;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,48 +15,50 @@ import java.util.List;
 
 public class ObjectTracker {
 
-    private Pair<Point, Point> coordinates;
+    public Pair<Point, Point> coordinates;
     private Mat trainingImageDescriptors;
     private static final String TAG = "OCVSample::ObjectTracker";
-
-    private Mat getTrainingImage(Pair<Point, Point> coordinates) {
-        // TODO: get the training image based on coordinates
-        return new Mat();
-    }
+    private Mat image;
+    private Mat trainingImage;
 
     private void setTrainingArea(Pair<Point, Point> coordinates) {
-        Mat trainingImage = getTrainingImage(coordinates);
         MatOfKeyPoint trainingImageKeypoints = detectKeypoints(trainingImage);
         this.trainingImageDescriptors = computeDescriptors(trainingImage, trainingImageKeypoints);
-        this.coordinates = coordinates;
     }
 
     public void matchObject(Mat image) {
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
-        MatOfKeyPoint keypoints = detectKeypoints(image);
-        KeyPoint[] keypointsArray = keypoints.toArray();
-        Mat descriptors = computeDescriptors(image, keypoints);
-        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
-        List<MatOfDMatch> matchMatrices = new ArrayList<MatOfDMatch>();
-        matcher.knnMatch(trainingImageDescriptors, descriptors, matchMatrices, 2);
+        this.image = image;
 
-        // Filter out the outliers
-        List<Point> goodMatches = new ArrayList<Point>();
-        for (MatOfDMatch matchMatrix : matchMatrices) {
-            // TODO: make sure we are getting the correct m and n
-            List<DMatch> matches = matchMatrix.toList();
 
-            DMatch m = matches.get(0);
-            DMatch n = matches.get(1);
-
-            if (m.distance < 0.75 * n.distance) {
-                double x = keypointsArray[m.trainIdx].pt.x;
-                double y = keypointsArray[m.trainIdx].pt.y;
-                goodMatches.add(new Point(x, y));
-            }
-        }
-
-        meanShift(goodMatches, 10);
+//        if (!hasTrainingImage()) {
+//            return;
+//        }
+//
+//        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
+//        MatOfKeyPoint keypoints = detectKeypoints(image);
+//        KeyPoint[] keypointsArray = keypoints.toArray();
+//        Mat descriptors = computeDescriptors(image, keypoints);
+//        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
+//        List<MatOfDMatch> matchMatrices = new ArrayList<MatOfDMatch>();
+//        matcher.knnMatch(trainingImageDescriptors, descriptors, matchMatrices, 2);
+//
+//        // Filter out the outliers
+//        List<Point> goodMatches = new ArrayList<Point>();
+//        for (MatOfDMatch matchMatrix : matchMatrices) {
+//            // TODO: make sure we are getting the correct m and n
+//            List<DMatch> matches = matchMatrix.toList();
+//
+//            DMatch m = matches.get(0);
+//            DMatch n = matches.get(1);
+//
+//            if (m.distance < 0.75 * n.distance) {
+//                double x = keypointsArray[m.trainIdx].pt.x;
+//                double y = keypointsArray[m.trainIdx].pt.y;
+//                goodMatches.add(new Point(x, y));
+//            }
+//        }
+//
+//        meanShift(goodMatches, 10);
     }
 
     private Point meanShift(List<Point> keypoints, double threshold) {
@@ -152,5 +151,45 @@ public class ObjectTracker {
         Mat descriptors = new Mat();
         descriptor.compute(img, keypoints, descriptors);
         return descriptors;
+    }
+
+    private boolean hasTrainingImage() {
+        return trainingImageDescriptors != null;
+    }
+
+    public boolean onSingleTapUp(double x, double y) {
+        Log.v(TAG, String.format("x: %f, y: %f", x, y));
+
+        // if we already have a training image, let's start a new one
+        if (hasTrainingImage()) {
+            trainingImageDescriptors = null;
+            coordinates = null;
+        }
+
+        if (coordinates == null) {
+            // this is the first corner of the rectangle
+            coordinates = new Pair<Point, Point>(new Point(x, y), new Point(0,0));
+            saveImage();
+        } else {
+            // this is the second corner of the rectangle
+            coordinates.second.x = x;
+            coordinates.second.y = y;
+
+            double yMin = Math.min(coordinates.first.y, coordinates.second.y);
+            double xMin = Math.min(coordinates.first.x, coordinates.second.x);
+
+            double yMax = Math.max(coordinates.first.y, coordinates.second.y);
+            double xMax = Math.max(coordinates.first.x, coordinates.second.x);
+
+            coordinates = new Pair<Point, Point>(new Point(xMin, yMin), new Point(xMax, yMax));
+
+            setTrainingArea(coordinates);
+        }
+        return true;
+    }
+
+
+    private void saveImage() {
+        this.trainingImage = this.image;
     }
 }

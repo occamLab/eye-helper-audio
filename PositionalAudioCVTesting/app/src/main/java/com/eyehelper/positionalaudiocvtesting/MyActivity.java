@@ -19,8 +19,10 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -75,6 +77,9 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private float[] gravity;
     private float[] geomagnetic;
 
+    private double imageRows;
+    private double imageCols;
+
     private volatile boolean soundRunning;
 
     private ObjectTracker objectTracker;
@@ -108,9 +113,12 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         setContentView(R.layout.color_blob_detection_surface_view);
         ButterKnife.inject(this);
 
-        //Make this class, which extends CameraVeiwListener the listener
+        objectTracker = new ObjectTracker();
+
+        //Make this class, which extends CameraViewListener the listener
         openCvCameraView.setCvCameraViewListener(this);
-        final GestureDetector gestureDetector = new GestureDetector(this, new TapDetector());
+
+        final GestureDetector gestureDetector = new GestureDetector(this, new TapGestureListener());
         openCvCameraView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -195,10 +203,15 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     //Every time we get a new camera frame
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        if (objectTracker != null) {
-            objectTracker.matchObject(inputFrame.gray());
+        Mat greyImage = inputFrame.gray();
+        imageCols = greyImage.cols();
+        imageRows = greyImage.rows();
+
+        objectTracker.matchObject(greyImage);
+        if (objectTracker.coordinates != null) {
+            Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
         }
-        return inputFrame.rgba();
+        return greyImage;
     }
 
     //Update text on the glass's display
@@ -281,11 +294,23 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         }
     }
 
-    class TapDetector extends GestureDetector.SimpleOnGestureListener {
+    class TapGestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
             Log.v(TAG, String.format("x: %f, y: %f", e.getX(), e.getY()));
-            return super.onSingleTapUp(e);
+
+            double xMargin = (openCvCameraView.getWidth() - imageCols) / 2;
+            double yMargin = (openCvCameraView.getHeight() - imageRows) / 2;
+
+            double x = e.getX() - xMargin;
+            double y = e.getY() - yMargin;
+
+            if (x < 0 || y < 0 || imageCols < x || imageRows < y) {
+                Log.v(TAG, "Tapped outside the image");
+                return true;
+            }
+
+            return objectTracker.onSingleTapUp(x, y);
         }
     }
 }
