@@ -50,22 +50,15 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private int currentFile = R.raw.height0angle_85;
 
     //Camera View
-    @InjectView(R.id.camera_view)
-    CameraBridgeViewBase openCvCameraView;
+    @InjectView(R.id.camera_view) CameraBridgeViewBase openCvCameraView;
 
     //Text Views
-    @InjectView(R.id.text_view_angle)
-    TextView angleText;
-    @InjectView(R.id.text_view_height)
-    TextView heightText;
-    @InjectView(R.id.text_view_distance)
-    TextView distanceText;
-    @InjectView(R.id.text_view_azimuth)
-    TextView azimuthText;
-    @InjectView(R.id.text_view_pitch)
-    TextView pitchText;
-    @InjectView(R.id.text_view_roll)
-    TextView rollText;
+    @InjectView(R.id.text_view_angle)       TextView angleText;
+    @InjectView(R.id.text_view_height)      TextView heightText;
+    @InjectView(R.id.text_view_distance)    TextView distanceText;
+    @InjectView(R.id.text_view_azimuth)     TextView azimuthText;
+    @InjectView(R.id.text_view_pitch)       TextView pitchText;
+    @InjectView(R.id.text_view_roll)        TextView rollText;
 
     //Sensor Data
     private SensorManager sensorManager;
