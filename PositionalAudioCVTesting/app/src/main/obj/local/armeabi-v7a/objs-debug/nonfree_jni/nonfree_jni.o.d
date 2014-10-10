@@ -51,7 +51,10 @@
  libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/flann/config.h \
  libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/nonfree/nonfree.hpp \
  libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/nonfree/features2d.hpp \
- /Users/chris/.android/android-ndk-r10b/platforms/android-15/arch-arm/usr/include/jni.h
+ /Users/chris/.android/android-ndk-r10b/platforms/android-15/arch-arm/usr/include/jni.h \
+ /Users/chris/.android/android-ndk-r10b/platforms/android-15/arch-arm/usr/include/android/log.h \
+ libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/imgproc/imgproc.hpp \
+ libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/imgproc/types_c.h
 
 libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/core/core.hpp:
 
@@ -156,3 +159,9 @@ libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/nonfree/nonfree.hpp
 libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/nonfree/features2d.hpp:
 
 /Users/chris/.android/android-ndk-r10b/platforms/android-15/arch-arm/usr/include/jni.h:
+
+/Users/chris/.android/android-ndk-r10b/platforms/android-15/arch-arm/usr/include/android/log.h:
+
+libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/imgproc/imgproc.hpp:
+
+libs/OpenCV-2.4.9-android-sdk/sdk/native/jni/include/opencv2/imgproc/types_c.h:

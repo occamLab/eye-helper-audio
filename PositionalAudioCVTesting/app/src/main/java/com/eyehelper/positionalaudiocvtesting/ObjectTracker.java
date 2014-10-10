@@ -1,5 +1,7 @@
 package com.eyehelper.positionalaudiocvtesting;
 
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Pair;
 
@@ -28,6 +30,28 @@ public class ObjectTracker {
 
     public void matchObject(Mat image) {
         this.image = image;
+        final int width = image.width();
+        final int height = image.height();
+        final byte[] imageInBytes = new byte[(int)(image.total()) * image.channels()]; //FIXME - long -> int conversation may be unsafe
+        image.get(0, 0, imageInBytes);
+
+        int frameSize = width * height;
+        final int[] rgba = new int[frameSize];
+
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                SIFTImpl.runSIFT(width, height, imageInBytes, rgba);
+
+                //Bitmap contains circles drawn on for keypoints
+                Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0, width, height);
+                return voids[0];
+            }
+        }.execute();
+
+
+
 
 
 //        if (!hasTrainingImage()) {

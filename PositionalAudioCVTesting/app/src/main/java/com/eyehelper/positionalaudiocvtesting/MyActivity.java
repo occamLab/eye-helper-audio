@@ -113,9 +113,6 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         setContentView(R.layout.color_blob_detection_surface_view);
         ButterKnife.inject(this);
 
-        //FIXME PROOF OF CONCEPT
-        SIFTImpl.runSIFT();
-
         objectTracker = new ObjectTracker();
 
         //Make this class, which extends CameraViewListener the listener
