@@ -10,11 +10,20 @@ android {
         targetSdkVersion 20
         versionCode 1
         versionName "1.0"
+        ndk {
+            moduleName "nonfree_jni"
+        }
     }
     buildTypes {
         release {
             runProguard false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['src/main/libs']
+            jni.srcDirs = [] //disable automatic ndk-build
         }
     }
 }
