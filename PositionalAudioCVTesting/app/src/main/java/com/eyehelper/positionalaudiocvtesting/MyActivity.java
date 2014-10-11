@@ -31,6 +31,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -38,6 +39,11 @@ import butterknife.InjectView;
 
 public class MyActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener {
     private static final String TAG = "OCVSample::Activity";
+
+    // Delete later:
+    // Debugging test variables
+    private Mat testImg;
+    private boolean testState = true;
 
     //The matrix of the image in rgba
     private Mat rgba;
@@ -123,8 +129,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
         objectTracker = new ObjectTracker();
 
-        //Make this class, which extends CameraViewListener the listener
-        openCvCameraView.setCvCameraViewListener(this);
+//        //Make this class, which extends CameraViewListener the listener
+//        openCvCameraView.setCvCameraViewListener(this);
 
         final GestureDetector gestureDetector = new GestureDetector(this, new TapGestureListener());
         openCvCameraView.setOnTouchListener(new View.OnTouchListener() {
@@ -140,6 +146,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
+        // why does this line of code happen twice?
         // Make this activity the listener for our camera view
         openCvCameraView.setCvCameraViewListener(this);
     }
@@ -207,20 +214,30 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         //When the camera view stops, release the camera
         rgba.release();
     }
-    
+
     //Every time we get a new camera frame
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Mat greyImage = inputFrame.gray();
-        Mat resized = new Mat();
-        imageCols = greyImage.cols();
-        imageRows = greyImage.rows();
-        Imgproc.resize(greyImage, resized, new Size(240,180));
 
-        objectTracker.matchObject(resized);
-        if (objectTracker.coordinates != null) {
-            Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
+        if (testState) {
+
+            Mat resized = new Mat();
+            imageCols = greyImage.cols();
+            imageRows = greyImage.rows();
+
+            // shrinking the image so we don't run out of memory
+            Imgproc.resize(greyImage, resized, new Size(240,180));
+
+            testImg = objectTracker.matchObject(greyImage);
+
+            if (objectTracker.coordinates != null) {
+                Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
+            }
+
+            testState = false;
         }
+//        return testImg;
         return greyImage;
     }
 

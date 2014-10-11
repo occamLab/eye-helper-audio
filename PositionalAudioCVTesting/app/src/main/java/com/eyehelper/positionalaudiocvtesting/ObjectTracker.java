@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Pair;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
@@ -29,8 +30,10 @@ public class ObjectTracker {
         this.trainingImageDescriptors = computeDescriptors(trainingImage, trainingImageKeypoints);
     }
 
-    public void matchObject(Mat image) {
+    public Mat matchObject(Mat image) {
+
         this.image = image;
+        Mat testMat = image.clone();
 
         final int width = image.width();
         final int height = image.height();
@@ -42,20 +45,35 @@ public class ObjectTracker {
         Log.i("DebugDebug 2 ", Arrays.toString(imageInBytes));
 
         int frameSize = width * height;
-        final int[] rgb = new int[frameSize];
+        final int[] outputImgArray = new int[frameSize];
 
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                SIFTImpl.runSIFT(width, height, imageInBytes, rgb);
-                Log.i("DebugDebug", Arrays.toString(rgb));
+        SIFTImpl.runSIFT(width, height, imageInBytes, outputImgArray);
+        Log.i("DebugDebug", Arrays.toString(outputImgArray));
 
-                //Bitmap contains circles drawn on for keypoints
-                Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                bmp.setPixels(rgb, 0/* offset */, width /* stride */, 0, 0, width, height);
-                return null;
-            }
-        }.execute();
+//        //Bitmap contains circles drawn on for keypoints
+//        Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+//        bmp.setPixels(outputImgArray, 0/* offset */, width /* stride */, 0, 0, width, height);
+
+//        Mat testMat = new Mat(width, height, CvType.CV_32S);
+//        testMat.convertTo(testMat, CvType.CV_32S);
+        testMat.put(width, height, outputImgArray);
+
+        return testMat;
+
+//        new AsyncTask<Void, Void, Void>() {
+//            @Override
+//            protected Void doInBackground(Void... voids) {
+//                SIFTImpl.runSIFT(width, height, imageInBytes, outputImgArray);
+//                Log.i("DebugDebug", Arrays.toString(outputImgArray));
+//
+//                //Bitmap contains circles drawn on for keypoints
+//                Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+//                bmp.setPixels(outputImgArray, 0/* offset */, width /* stride */, 0, 0, width, height);
+//                return null;
+//            }
+//        }.execute();
+
+
 
 //        if (!hasTrainingImage()) {
 //            return;
