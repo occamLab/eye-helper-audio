@@ -1,6 +1,9 @@
 package com.eyehelper.positionalaudiocvtesting;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.YuvImage;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -22,7 +25,12 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+
+import java.io.ByteArrayOutputStream;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -204,10 +212,12 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Mat greyImage = inputFrame.gray();
+        Mat resized = new Mat();
         imageCols = greyImage.cols();
         imageRows = greyImage.rows();
+        Imgproc.resize(greyImage, resized, new Size(240,180));
 
-        objectTracker.matchObject(greyImage);
+        objectTracker.matchObject(resized);
         if (objectTracker.coordinates != null) {
             Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
         }

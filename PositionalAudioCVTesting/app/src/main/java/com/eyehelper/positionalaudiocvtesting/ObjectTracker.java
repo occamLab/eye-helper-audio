@@ -12,6 +12,7 @@ import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.FeatureDetector;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,29 +31,31 @@ public class ObjectTracker {
 
     public void matchObject(Mat image) {
         this.image = image;
+
         final int width = image.width();
         final int height = image.height();
+
+        Log.i("MatrixSize", width + " width, " + height + " height");
+
         final byte[] imageInBytes = new byte[(int)(image.total()) * image.channels()]; //FIXME - long -> int conversation may be unsafe
         image.get(0, 0, imageInBytes);
+        Log.i("DebugDebug 2 ", Arrays.toString(imageInBytes));
 
         int frameSize = width * height;
-        final int[] rgba = new int[frameSize];
+        final int[] rgb = new int[frameSize];
 
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
-                SIFTImpl.runSIFT(width, height, imageInBytes, rgba);
+                SIFTImpl.runSIFT(width, height, imageInBytes, rgb);
+                Log.i("DebugDebug", Arrays.toString(rgb));
 
                 //Bitmap contains circles drawn on for keypoints
                 Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                bmp.setPixels(rgba, 0/* offset */, width /* stride */, 0, 0, width, height);
-                return voids[0];
+                bmp.setPixels(rgb, 0/* offset */, width /* stride */, 0, 0, width, height);
+                return null;
             }
         }.execute();
-
-
-
-
 
 //        if (!hasTrainingImage()) {
 //            return;
