@@ -38,17 +38,18 @@ public class ObjectTracker {
         final int width = image.width();
         final int height = image.height();
 
-        Log.i("MatrixSize", width + " width, " + height + " height");
+//        Log.i("MatrixSize", width + " width, " + height + " height");
 
         final byte[] imageInBytes = new byte[(int)(image.total()) * image.channels()]; //FIXME - long -> int conversation may be unsafe
         image.get(0, 0, imageInBytes);
-        Log.i("DebugDebug 2 ", Arrays.toString(imageInBytes));
+        Log.i("DebugDebug Previous ", Arrays.toString(imageInBytes));
 
-        int frameSize = width * height;
-        final int[] outputImgArray = new int[frameSize];
+        final int[] outputImgArray = new int[width * height];
 
         SIFTImpl.runSIFT(width, height, imageInBytes, outputImgArray);
-        Log.i("DebugDebug", Arrays.toString(outputImgArray));
+//        Log.i("DebugDebug After", Arrays.toString(outputImgArray));
+        Log.i("DebugDebug After ", Arrays.toString(imageInBytes));
+
 
 //        //Bitmap contains circles drawn on for keypoints
 //        Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -56,9 +57,10 @@ public class ObjectTracker {
 
 //        Mat testMat = new Mat(width, height, CvType.CV_32S);
 //        testMat.convertTo(testMat, CvType.CV_32S);
-        testMat.put(width, height, outputImgArray);
-
-        return testMat;
+        testMat.put(0, 0, imageInBytes);
+        testMat.convertTo(testMat, CvType.CV_8UC4);
+        Log.i("DebugDebug dump", testMat.dump());
+        return testMat.t();
 
 //        new AsyncTask<Void, Void, Void>() {
 //            @Override

@@ -44,6 +44,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     // Debugging test variables
     private Mat testImg;
     private boolean testState = true;
+    private long prev;
 
     //The matrix of the image in rgba
     private Mat rgba;
@@ -219,13 +220,12 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Mat greyImage = inputFrame.gray();
-
-        if (testState) {
-
+        if (testState && System.currentTimeMillis() - prev > 15000) {
+            prev = System.currentTimeMillis();
             Mat resized = new Mat();
             imageCols = greyImage.cols();
             imageRows = greyImage.rows();
-
+            Log.i("DebugDebug", greyImage.type() + greyImage.dump());
             // shrinking the image so we don't run out of memory
             Imgproc.resize(greyImage, resized, new Size(240,180));
 
@@ -234,11 +234,10 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
             if (objectTracker.coordinates != null) {
                 Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
             }
-
-            testState = false;
+//            testState = false;
         }
 //        return testImg;
-        return greyImage;
+        return testImg;
     }
 
     //Update text on the glass's display
