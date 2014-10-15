@@ -1,4 +1,4 @@
 eye-helper-audio
 ================
 
-Audio for Eye-Heper
+Audio for Eye-Helper
