@@ -156,32 +156,6 @@ public class ObjectTracker {
 
             // difference between the current and last guess
             diff = Math.sqrt(Math.pow((last_guess.x - x), 2) + Math.pow((last_guess.y - y), 2));
-
-            //  Finding the radius:
-            List<Double> norm_weights = new ArrayList<Double>();
-            for (int i = 0; i < x_weights.size(); i++) {
-                norm_weights.add(Utils.norm(new Point(x_weights.get(i), y_weights.get(i))));
-            }
-
-            double avg_weight = Utils.sum(norm_weights) / norm_weights.size();
-
-            // TODO: get standard deviation using java
-            // double std_weight = Math.std(norm_weights);
-
-            //  Threshold based on standard deviations (to account for different kp density scenarios)
-            threshold = avg_weight; // - .25*std_weight
-            List<Double> inliers = new ArrayList<Double>();
-
-            //  Radius corresponds to the farthest-away keypoints are in the threshold from center of mass (x,y)
-            for (int index = 0; index < norm_weights.size(); index++) {
-                if (norm_weights.get(index) > threshold) {
-                    Point inliearCoordinates = new Point(keypoints.get(index).x - x, keypoints.get(index).y - y);
-                    inliers.add(Utils.norm(inliearCoordinates));
-                }
-            }
-
-            // TODO: why do we need radius?
-            double radius = Collections.max(inliers);
         }
         return hypothesis;
     }
@@ -217,6 +191,7 @@ public class ObjectTracker {
             // this is the first corner of the rectangle
             coordinates = new Pair<Point, Point>(new Point(x, y), new Point(0,0));
             saveImage();
+            // TODO: freeze the frame until the training image selection is complete
         } else {
             // this is the second corner of the rectangle
             coordinates.second.x = x;
