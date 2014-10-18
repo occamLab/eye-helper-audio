@@ -1,14 +1,10 @@
 package com.eyehelper.positionalaudiocvtesting;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.YuvImage;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -25,13 +21,9 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-
-import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -56,13 +48,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private int sensorHeight = 4;
 
     //Position Variables
-    private double distance = 100;
-    private double angle = 0;
-    private double height = 0;
-
-    //Sound Variables
-    private MediaPlayer mediaPlayer = new MediaPlayer();
-    private int currentFile = R.raw.height0angle_85;
+    //TODO: double check variable scope things: hypothesis is public in ObjectTracker.java
+    //TODO: double check variable scope things: distance/angle/height are private variables in PositionalAudio.java
 
     //Camera View
     @InjectView(R.id.camera_view)
@@ -86,9 +73,10 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private SensorManager sensorManager;
     private Sensor accelerometer;
     private Sensor magnetometer;
-    private float azimuth = 0.0f;
-    private float pitch = 0.0f;
-    private float roll = 0.0f;
+    public float azimuth = 0.0f;
+    public float pitch = 0.0f;
+    public float roll = 0.0f;
+
     private float[] gravity;
     private float[] geomagnetic;
 
@@ -98,6 +86,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     private volatile boolean soundRunning;
 
     private ObjectTracker objectTracker;
+    private PositionalAudio positionalAudio;
 
     //This is what we use to determine whether or not the app loaded successfully
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
@@ -129,6 +118,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         ButterKnife.inject(this);
 
         objectTracker = new ObjectTracker();
+        positionalAudio = new PositionalAudio();
 
 //        //Make this class, which extends CameraViewListener the listener
 //        openCvCameraView.setCvCameraViewListener(this);
@@ -182,7 +172,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 while (soundRunning) {
                     try {
                         Thread.sleep(500);
-                        playSound();
+                        positionalAudio.playSound(this);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -240,60 +230,6 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         return testImg;
     }
 
-    //Update text on the glass's display
-    public void updateText() {
-        //In order to update UI elements, we have to run on the UI thread
-        MyActivity.this.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                //Update the text views
-                distanceText.setText("Distance: " + String.format("%.1f", distance));
-                angleText.setText("Angle: " + String.format("%.1f", angle));
-                heightText.setText("Height: " + String.format("%.1f", height));
-
-                azimuthText.setText("Azimuth: " + String.format("%.2f", Math.toDegrees(azimuth)));
-                pitchText.setText("Pitch: " + String.format("%.2f", pitch));
-                rollText.setText("Roll: " + String.format("%.2f", Math.toDegrees(roll)));
-            }
-        });
-
-    }
-
-    //Decide which sound file to play
-    public int getSoundFile() {
-        Log.i("Calculating which sound file", "height :" + height + ", angle :" + angle);
-
-        // Floor the double and limit to 0 <= height <= 7
-        int roundedHeight = Math.max(Math.min((int) Math.floor(height),7),0);
-        // Round to the nearest multiple of 5 and limit to -85 <= angle <= 85
-        int roundedAngle = Math.max(Math.min(5*(Math.round((int)(height/5))), 85), -85);
-        // Chosen file based on height and angle -> index in resource array
-        int chosenFile = roundedHeight * 16 + (roundedAngle + 5)/10 + 9;
-
-        Log.i("Getting Sound File", "roundedHeight: " + roundedHeight + ", roundedAngle" + roundedAngle + ", chosen soundFile: " + chosenFile);
-        return getResources().obtainTypedArray(R.array.sound_files).getResourceId(chosenFile, -1);
-    }
-
-    //Play a sound given the resource
-    public void playSound() {
-        //If a sound is currently playing, stop it.
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-        }
-        //Set up the media player
-        mediaPlayer = MediaPlayer.create(this.getApplicationContext(), currentFile);
-        mediaPlayer.start();
-
-        //Listen for completion
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                //Release the media player on completion
-                mp.release();
-            }
-        });
-    }
-
     //When the accuracy of a sensor changes
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -321,6 +257,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     }
 
     class TapGestureListener extends GestureDetector.SimpleOnGestureListener {
+        // TODO: Should TapGestureListener be a class within MyActivity or its own thing??
+        // TODO: (futurImplement training image selection from the webapp
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
             Log.v(TAG, String.format("x: %f, y: %f", e.getX(), e.getY()));

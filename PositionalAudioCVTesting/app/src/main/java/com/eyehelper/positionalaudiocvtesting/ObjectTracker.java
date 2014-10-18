@@ -20,6 +20,7 @@ import java.util.List;
 public class ObjectTracker {
 
     public Pair<Point, Point> coordinates;
+    public Point hypothesis;
     private Mat trainingImageDescriptors;
     private static final String TAG = "OCVSample::ObjectTracker";
     private Mat image;
@@ -105,7 +106,7 @@ public class ObjectTracker {
 //            }
 //        }
 //
-//        meanShift(goodMatches, 10);
+//        this.hypothesis = meanShift(goodMatches, 10);
     }
 
     private Point meanShift(List<Point> keypoints, double threshold) {
