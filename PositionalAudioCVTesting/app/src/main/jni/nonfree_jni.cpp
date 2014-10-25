@@ -19,13 +19,15 @@ using namespace std;
 // JNI interface functions, be careful about the naming.
 extern "C"
 {
-    JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jshortArray image, jintArray keypoints);
+    JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jshortArray image, jintArray x, jintArray y, jintArray descriptors);
 };
 
- JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jshortArray image, jintArray keypoints)
+ JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jshortArray image, jintArray x, jintArray y, jintArray descriptors)
     {
         jshort* _image  = env->GetShortArrayElements(image, 0);
-        jint*  _keypoints = env->GetIntArrayElements(keypoints, 0);
+        jint*  _x = env->GetIntArrayElements(x, 0);
+        jint*  _y = env->GetIntArrayElements(y, 0);
+        jint* _descriptor = env->GetIntArrayElements(descriptor, 0);
 
         Mat mImage(height, width, CV_8UC4, (unsigned char *)_image);
         Mat mKeypoints(height, width, CV_8UC4, (unsigned char *)_keypoints);
@@ -42,9 +44,24 @@ extern "C"
         detector.detect(mImage, v);
         detector.compute(mImage, v, descriptors);
 
-        for( size_t i = 0; i < v.size(); i++ )
-            circle(mImage, Point(v[i].pt.x, v[i].pt.y), 10, Scalar(0,0,255,255));
+        _x = new int[v.size()];
+        _y = new int[v.size()];
+        _descriptors = new int[v.size()*descriptors.cols];
 
-        env->ReleaseIntArrayElements(keypoints, _keypoints, 0);
+        for( size_t i = 0; i < v.size(); i++ ){
+//            circle(mImage, Point(v[i].pt.x, v[i].pt.y), 10, Scalar(0,0,255,255));
+              _x[i] = v[i].pt.x;
+              _y[i] = v[i].pt.y;
+              for (size_t j = 0; j<descriptors.cols; j++){
+                    _descriptor[i*descriptors.cols + j] = descriptors.at<uchar>(i,j);
+              }
+
+        }
+
+
+        env->ReleaseIntArrayElements(x, _x, 0);
+        env->ReleaseIntArrayElements(y, _y, 0);
+        env->ReleaseIntArrayElements(descriptor, _descriptor, 0);
         env->ReleaseShortArrayElements(image, _image, 0);
+
     }

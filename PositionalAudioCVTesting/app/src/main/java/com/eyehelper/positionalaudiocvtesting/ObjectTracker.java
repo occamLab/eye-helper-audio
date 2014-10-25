@@ -7,10 +7,14 @@ import android.util.Pair;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
+import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.KeyPoint;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,10 +37,18 @@ public class ObjectTracker {
 
     public Mat matchObject(Mat image) {
         this.image = image;
+
+        if (!hasTrainingImage()) {
+            return image;
+        }
         Mat testMat = image.clone();
 
         final int width = image.width();
         final int height = image.height();
+
+        int[] x = new int[0];
+        int[] y = new int[0];
+        int[] descriptor = new int[0];
 
         final byte[] imageInBytes = new byte[(int)(image.total()) * image.channels()]; //FIXME - long -> int conversation may be unsafe
         image.get(0, 0, imageInBytes);
@@ -47,9 +59,7 @@ public class ObjectTracker {
             newShort[i] = (short) (imageInBytes[i] & 0xFF);
         }
 
-        final int[] outputImgArray = new int[width * height];
-
-        SIFTImpl.runSIFT(width, height, newShort, outputImgArray);
+        SIFTImpl.runSIFT(width, height, newShort, x, y, descriptor);
 
         for (int i = 0; i < newShort.length; i++) {
             imageInBytes[i] = (byte) newShort[i];
@@ -59,24 +69,7 @@ public class ObjectTracker {
         testMat.convertTo(testMat, 0);
         return testMat;
 
-//        new AsyncTask<Void, Void, Void>() {
-//            @Override
-//            protected Void doInBackground(Void... voids) {
-//                SIFTImpl.runSIFT(width, height, imageInBytes, outputImgArray);
-//                Log.i("DebugDebug", Arrays.toString(outputImgArray));
-//
-//                //Bitmap contains circles drawn on for keypoints
-//                Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-//                bmp.setPixels(outputImgArray, 0/* offset */, width /* stride */, 0, 0, width, height);
-//                return null;
-//            }
-//        }.execute();
 
-
-
-//        if (!hasTrainingImage()) {
-//            return;
-//        }
 //
 //        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
 //        MatOfKeyPoint keypoints = detectKeypoints(image);
@@ -101,6 +94,8 @@ public class ObjectTracker {
 //                goodMatches.add(new Point(x, y));
 //            }
 //        }
+
+//        return image;
 //
 //        this.hypothesis = meanShift(goodMatches, 10);
     }
@@ -158,14 +153,14 @@ public class ObjectTracker {
     }
 
     private MatOfKeyPoint detectKeypoints(Mat img) {
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
+        FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
         MatOfKeyPoint keypoints = new MatOfKeyPoint();
         detector.detect(img, keypoints);
         return keypoints;
     }
 
     private Mat computeDescriptors(Mat img, MatOfKeyPoint keypoints) {
-        DescriptorExtractor descriptor = DescriptorExtractor.create(DescriptorExtractor.SIFT);
+        DescriptorExtractor descriptor = DescriptorExtractor.create(DescriptorExtractor.ORB);
         Mat descriptors = new Mat();
         descriptor.compute(img, keypoints, descriptors);
         return descriptors;

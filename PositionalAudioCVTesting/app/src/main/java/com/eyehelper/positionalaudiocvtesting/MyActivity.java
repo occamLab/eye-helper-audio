@@ -210,26 +210,15 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         Mat greyImage = inputFrame.gray();
-        if (testState && System.currentTimeMillis() - prev > 15000) {
-            prev = System.currentTimeMillis();
-            Mat resized = new Mat();
-            imageCols = greyImage.cols();
-            imageRows = greyImage.rows();
-            Log.i("DebugDebug", greyImage.type() + greyImage.dump());
-            // shrinking the image so we don't run out of memory
-            Imgproc.resize(greyImage, resized, new Size(240,180));
-            if (!greyImage.empty()) {
-                testImg = objectTracker.matchObject(greyImage);
-            }
-
-            if (objectTracker.coordinates != null) {
-                Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
-            }
-//            testState = false;
+        imageCols = greyImage.cols();
+        imageRows = greyImage.rows();
+        if (!greyImage.empty()) {
+            testImg = objectTracker.matchObject(greyImage);
         }
-//        return testImg;
 
-        assert testImg.size().equals(greyImage.size());
+        if (objectTracker.coordinates != null) {
+            Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
+        }
         return testImg;
     }
 
