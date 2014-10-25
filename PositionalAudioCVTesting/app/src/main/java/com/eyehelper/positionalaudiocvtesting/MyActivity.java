@@ -172,7 +172,7 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
                 while (soundRunning) {
                     try {
                         Thread.sleep(500);
-                        positionalAudio.playSound(this);
+                        positionalAudio.playSound(MyActivity.this);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -218,8 +218,9 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
             Log.i("DebugDebug", greyImage.type() + greyImage.dump());
             // shrinking the image so we don't run out of memory
             Imgproc.resize(greyImage, resized, new Size(240,180));
-
-            testImg = objectTracker.matchObject(greyImage);
+            if (!greyImage.empty()) {
+                testImg = objectTracker.matchObject(greyImage);
+            }
 
             if (objectTracker.coordinates != null) {
                 Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
@@ -227,6 +228,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 //            testState = false;
         }
 //        return testImg;
+
+        assert testImg.size().equals(greyImage.size());
         return testImg;
     }
 

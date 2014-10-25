@@ -19,5 +19,5 @@ public class SIFTImpl {
             System.err.println("Native code library failed to load.\n" + e);
         }
     }
-    public static native void runSIFT(int width, int height, byte[] image, int[] keypoint);
+    public static native void runSIFT(int width, int height, short[] image, int[] keypoint);
 }

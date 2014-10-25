@@ -54,7 +54,7 @@ public class PositionalAudio {
     }
 
     //Update text on the glass's display
-    public void updateText(MyActivity myActivity) {
+    public void updateText(final MyActivity myActivity) {
         //In order to update UI elements, we have to run on the UI thread
         myActivity.runOnUiThread(new Runnable() {
             @Override

@@ -32,36 +32,32 @@ public class ObjectTracker {
     }
 
     public Mat matchObject(Mat image) {
-
         this.image = image;
         Mat testMat = image.clone();
 
         final int width = image.width();
         final int height = image.height();
 
-//        Log.i("MatrixSize", width + " width, " + height + " height");
-
         final byte[] imageInBytes = new byte[(int)(image.total()) * image.channels()]; //FIXME - long -> int conversation may be unsafe
         image.get(0, 0, imageInBytes);
-        Log.i("DebugDebug Previous ", Arrays.toString(imageInBytes));
+
+        short[] newShort = new short[imageInBytes.length];
+
+        for (int i = 0; i < imageInBytes.length; i++) {
+            newShort[i] = (short) (imageInBytes[i] & 0xFF);
+        }
 
         final int[] outputImgArray = new int[width * height];
 
-        SIFTImpl.runSIFT(width, height, imageInBytes, outputImgArray);
-//        Log.i("DebugDebug After", Arrays.toString(outputImgArray));
-        Log.i("DebugDebug After ", Arrays.toString(imageInBytes));
+        SIFTImpl.runSIFT(width, height, newShort, outputImgArray);
 
+        for (int i = 0; i < newShort.length; i++) {
+            imageInBytes[i] = (byte) newShort[i];
+        }
 
-//        //Bitmap contains circles drawn on for keypoints
-//        Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-//        bmp.setPixels(outputImgArray, 0/* offset */, width /* stride */, 0, 0, width, height);
-
-//        Mat testMat = new Mat(width, height, CvType.CV_32S);
-//        testMat.convertTo(testMat, CvType.CV_32S);
         testMat.put(0, 0, imageInBytes);
-        testMat.convertTo(testMat, CvType.CV_8UC4);
-        Log.i("DebugDebug dump", testMat.dump());
-        return testMat.t();
+        testMat.convertTo(testMat, 0);
+        return testMat;
 
 //        new AsyncTask<Void, Void, Void>() {
 //            @Override

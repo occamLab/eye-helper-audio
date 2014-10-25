@@ -19,12 +19,12 @@ using namespace std;
 // JNI interface functions, be careful about the naming.
 extern "C"
 {
-    JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jbyteArray image, jintArray keypoints);
+    JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jshortArray image, jintArray keypoints);
 };
 
- JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jbyteArray image, jintArray keypoints)
+ JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jshortArray image, jintArray keypoints)
     {
-        jbyte* _image  = env->GetByteArrayElements(image, 0);
+        jshort* _image  = env->GetShortArrayElements(image, 0);
         jint*  _keypoints = env->GetIntArrayElements(keypoints, 0);
 
         Mat mImage(height, width, CV_8UC4, (unsigned char *)_image);
@@ -46,5 +46,5 @@ extern "C"
             circle(mImage, Point(v[i].pt.x, v[i].pt.y), 10, Scalar(0,0,255,255));
 
         env->ReleaseIntArrayElements(keypoints, _keypoints, 0);
-        env->ReleaseByteArrayElements(image, _image, 0);
+        env->ReleaseShortArrayElements(image, _image, 0);
     }
