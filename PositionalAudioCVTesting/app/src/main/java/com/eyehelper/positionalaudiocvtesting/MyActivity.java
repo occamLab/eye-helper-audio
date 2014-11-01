@@ -12,6 +12,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.TextView;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -68,6 +69,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
     TextView pitchText;
     @InjectView(R.id.text_view_roll)
     TextView rollText;
+    @InjectView(R.id.send_image)
+    Button test;
 
     //Sensor Data
     private SensorManager sensorManager;
@@ -87,6 +90,8 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
 
     private ObjectTracker objectTracker;
     private PositionalAudio positionalAudio;
+
+    boolean sendImage;
 
     //This is what we use to determine whether or not the app loaded successfully
     private BaseLoaderCallback loaderCallback = new BaseLoaderCallback(this) {
@@ -140,6 +145,12 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         // why does this line of code happen twice?
         // Make this activity the listener for our camera view
         openCvCameraView.setCvCameraViewListener(this);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sendImage = true;
+            }
+        });
     }
 
     @Override
@@ -212,14 +223,15 @@ public class MyActivity extends Activity implements CameraBridgeViewBase.CvCamer
         Mat greyImage = inputFrame.gray();
         imageCols = greyImage.cols();
         imageRows = greyImage.rows();
-        if (!greyImage.empty()) {
+        if (!greyImage.empty() && sendImage) {
+            sendImage = false;
             testImg = objectTracker.matchObject(greyImage);
         }
 
         if (objectTracker.coordinates != null) {
             Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
         }
-        return testImg;
+        return greyImage;
     }
 
     //When the accuracy of a sensor changes

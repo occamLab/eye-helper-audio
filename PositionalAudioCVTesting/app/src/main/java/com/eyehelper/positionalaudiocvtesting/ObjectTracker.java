@@ -1,24 +1,16 @@
 package com.eyehelper.positionalaudiocvtesting;
 
-import android.graphics.Bitmap;
-import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Pair;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
-import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.features2d.KeyPoint;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class ObjectTracker {
@@ -45,26 +37,42 @@ public class ObjectTracker {
 
         final int width = image.width();
         final int height = image.height();
-
-        int[] x = new int[0];
-        int[] y = new int[0];
-        int[] descriptor = new int[0];
+        int[] size = new int [2];
 
         final byte[] imageInBytes = new byte[(int)(image.total()) * image.channels()]; //FIXME - long -> int conversation may be unsafe
         image.get(0, 0, imageInBytes);
 
-        short[] newShort = new short[imageInBytes.length];
+        short[] imageInShorts = new short[imageInBytes.length];
 
         for (int i = 0; i < imageInBytes.length; i++) {
-            newShort[i] = (short) (imageInBytes[i] & 0xFF);
+            imageInShorts[i] = (short) (imageInBytes[i] & 0xFF);
         }
 
-        SIFTImpl.runSIFT(width, height, newShort, x, y, descriptor);
+        float[] result = SIFTImpl.runSIFT(width, height, imageInShorts, size);
 
-        for (int i = 0; i < newShort.length; i++) {
-            imageInBytes[i] = (byte) newShort[i];
+        for (int i = 0; i < imageInShorts.length; i++) {
+            imageInBytes[i] = (byte) imageInShorts[i];
         }
 
+        int[] keypoints_x = new int[size[0]];
+        int[] keypoints_y = new int[size[0]];
+        float[][] descriptors = new float[size[0]][size[1]];
+
+        // Unpack results
+        for (int i = 0; i < size[0]; i++) {
+            keypoints_x[i] = (int) result[i * (2 + size[1])];
+            keypoints_y[i] = (int) result[i * (2 + size[1]) + 1];
+            for (int j = 0; j < size[1]; j++) {
+                Log.i("DebugDebug", result[i*(2+size[1]) + j +1] + " float");
+                descriptors[i][j] = result[i * (2 + size[1]) + j + 1];
+            }
+        }
+
+        Log.i("DebugDebug Unpacked X", Arrays.toString(keypoints_x));
+        Log.i("DebugDebug Unpacked Y", Arrays.toString(keypoints_y));
+        Log.i("DebugDebug Unpacked Descriptors", Arrays.toString(descriptors));
+
+        // Yay it works now!
         testMat.put(0, 0, imageInBytes);
         testMat.convertTo(testMat, 0);
         return testMat;

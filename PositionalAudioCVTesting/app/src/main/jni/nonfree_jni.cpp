@@ -16,52 +16,54 @@ using namespace std;
 
 #define APPNAME "MyApp"
 
-// JNI interface functions, be careful about the naming.
+// Get keypoints and descriptors for training image
 extern "C"
 {
-    JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jshortArray image, jintArray x, jintArray y, jintArray descriptors);
+    JNIEXPORT jfloatArray JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject obj, jint height, jint width, jshortArray image, jintArray dimens);
 };
 
- JNIEXPORT void JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject thiz, jint width, jint height, jshortArray image, jintArray x, jintArray y, jintArray descriptors)
+ JNIEXPORT jfloatArray JNICALL Java_com_eyehelper_positionalaudiocvtesting_SIFTImpl_runSIFT(JNIEnv* env, jobject obj, jint height, jint width, jshortArray image, jintArray dimens)
     {
+        jfloatArray result;
         jshort* _image  = env->GetShortArrayElements(image, 0);
-        jint*  _x = env->GetIntArrayElements(x, 0);
-        jint*  _y = env->GetIntArrayElements(y, 0);
-        jint* _descriptor = env->GetIntArrayElements(descriptor, 0);
+        jint* _dimens = env->GetIntArrayElements(dimens, 0);
 
-        Mat mImage(height, width, CV_8UC4, (unsigned char *)_image);
-        Mat mKeypoints(height, width, CV_8UC4, (unsigned char *)_keypoints);
+        Mat mImage(height, width, CV_8UC4, (unsigned char *) _image);
+        Mat mKeypoints(height, width, CV_8UC4, (unsigned char *) _image);
         //Mat mgray(height, width, CV_8UC1, (unsigned char *)_yuv);
 
         //Please make attention about BGRA byte order
         //ARGB stored in java as int array becomes BGRA at native level
-        cvtColor(mImage, mKeypoints, CV_YUV420sp2BGR, 4);
+//        cvtColor(mImage, mKeypoints, CV_YUV420sp2BGR, 4);
 
         vector<KeyPoint> v;
-        Mat descriptors;
+        Mat descriptor;
 
         SiftFeatureDetector detector;
         detector.detect(mImage, v);
-        detector.compute(mImage, v, descriptors);
+        detector.compute(mImage, v, descriptor);
 
-        _x = new int[v.size()];
-        _y = new int[v.size()];
-        _descriptors = new int[v.size()*descriptors.cols];
+        int size = v.size() * (2 + descriptor.cols);
+        result = env->NewFloatArray(size);
+        jfloat fill[size];
+        int ptr = 0;
 
-        for( size_t i = 0; i < v.size(); i++ ){
+        for( size_t i = 0; i < v.size(); i++ ) {
 //            circle(mImage, Point(v[i].pt.x, v[i].pt.y), 10, Scalar(0,0,255,255));
-              _x[i] = v[i].pt.x;
-              _y[i] = v[i].pt.y;
-              for (size_t j = 0; j<descriptors.cols; j++){
-                    _descriptor[i*descriptors.cols + j] = descriptors.at<uchar>(i,j);
-              }
-
+            fill[ptr] = v[i].pt.x; ptr ++;
+            fill[ptr] = v[i].pt.y; ptr ++;
+            for (size_t j = 0; j<descriptor.cols; j++){
+                fill[ptr] = (float) descriptor.at<float>(i,j); ptr++;
+            }
         }
 
+        _dimens[0] = v.size();
+        _dimens[1] = descriptor.cols;
 
-        env->ReleaseIntArrayElements(x, _x, 0);
-        env->ReleaseIntArrayElements(y, _y, 0);
-        env->ReleaseIntArrayElements(descriptor, _descriptor, 0);
+
+        env->ReleaseIntArrayElements(dimens, _dimens, 0);
         env->ReleaseShortArrayElements(image, _image, 0);
+        env->SetFloatArrayRegion(result, 0, size, fill);
 
+        return result;
     }

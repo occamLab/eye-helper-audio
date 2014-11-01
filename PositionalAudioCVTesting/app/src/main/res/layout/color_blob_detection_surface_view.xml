@@ -56,4 +56,10 @@
         android:id="@+id/text_view_roll"
         android:layout_gravity="end|bottom" />
 
+    <Button
+        android:id="@+id/send_image"
+        android:text="test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
 </FrameLayout>
