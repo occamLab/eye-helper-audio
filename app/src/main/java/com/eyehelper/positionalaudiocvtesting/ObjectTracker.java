@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ObjectTracker {
-    private static final String TAG = "OCVSample::ObjectTracker";
+    private static final String TAG = "ObjectTracker";
 
     // Object Tracker's Guess
     public Point hypothesis;
@@ -30,6 +30,7 @@ public class ObjectTracker {
     private Mat trainingImageDescriptors;
     public Pair<Point, Point> coordinates;
     private Mat trainingImage;
+    boolean hasTrainingImage = false;
 
     public void saveCurrentImage(Mat image) {
         currentImage = image;
@@ -154,11 +155,13 @@ public class ObjectTracker {
                     trainingImageDescriptors = descriptors;
                 }
             }.run(trainingImage);
+
+            hasTrainingImage = true;
         }
         return true;
     }
 
     public boolean hasTrainingImage() {
-        return trainingImage != null;
+        return hasTrainingImage;
     }
 }
