@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<shape android:shape="rectangle"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- dark red -->
-    <solid android:color="#ffbf1111" />
-</shape>
-<!-- From: file:/Users/Sophia/Documents/Code/Eye-Helper/eye-helper-audio/threadsample/app/src/main/res/drawable/imagedownloadfailed.xml -->
