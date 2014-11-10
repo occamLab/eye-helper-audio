@@ -18,10 +18,10 @@ public class AudioHandler {
     private MediaPlayer mediaPlayer = new MediaPlayer();
 
     //Camera Parameters
-    private double focal = 2.8;
-    private int objWidth = 127;
-    private int imgHeight = 512;
-    private int sensorHeight = 4;
+    final static private double FOCAL = 2.8;
+    final static private int OBJ_WIDTH = 127;
+    final static private int IMG_HEIGHT = 512;
+    final static private int SENSOR_HEIGHT = 4;
 
     private double x, y;
 

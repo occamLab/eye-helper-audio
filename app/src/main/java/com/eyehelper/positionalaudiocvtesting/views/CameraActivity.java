@@ -1,6 +1,7 @@
 package com.eyehelper.positionalaudiocvtesting.views;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -18,12 +19,14 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 
-public class ObjectTrackingActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class CameraActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
     private static final String TAG = "OCVSample::Activity";
 
     //Camera View
@@ -32,6 +35,9 @@ public class ObjectTrackingActivity extends Activity implements CameraBridgeView
 
     private double imageRows;
     private double imageCols;
+    private int frames;
+    private static final int FPS = 10;
+
     private ObjectTracker objectTracker;
     private AudioHandler positionalAudio;
     private OrientationHandler orientationHandler;
@@ -46,7 +52,6 @@ public class ObjectTrackingActivity extends Activity implements CameraBridgeView
                 case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV loaded successfully");
                     cameraPreview.enableView();
-                    //cameraPreview.setOnTouchListener(MyActivity.this);
                 }
                 break;
                 //Otherwise it didn't
@@ -130,8 +135,13 @@ public class ObjectTrackingActivity extends Activity implements CameraBridgeView
             objectTracker.saveCurrentImage(greyImage);
         }
 
-        if (!greyImage.empty()) {
-            objectTracker.matchObject(greyImage);
+        if (!greyImage.empty() && frames == FPS) {
+            Mat resized = new Mat();
+            Imgproc.resize(greyImage, resized, new Size(), .3, .3, 1);
+            objectTracker.matchObject(resized);
+            frames = 0;
+        } else {
+            frames++;
         }
 
 //        if (objectTracker.coordinates != null) {

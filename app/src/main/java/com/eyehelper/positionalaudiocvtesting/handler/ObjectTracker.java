@@ -34,37 +34,42 @@ public class ObjectTracker {
         currentImage = image;
     }
 
-    public void matchObject(Mat image) {
+    public void matchObject(final Mat image) {
         this.currentImage = image;
 
         if (!hasTrainingImage()) {
             return;
         }
 
-        new SIFTWrapper() {
+        new Thread(new Runnable() {
             @Override
-            public void callback(KeyPoint[] keyPoints, Mat descriptors) {
-                DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
-                List<MatOfDMatch> matchMatrices = new ArrayList<MatOfDMatch>();
-                matcher.knnMatch(trainingImageDescriptors, descriptors, matchMatrices, 2);
+            public void run() {
+                new SIFTWrapper() {
+                    @Override
+                    public void callback(KeyPoint[] keyPoints, Mat descriptors) {
+                        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
+                        List<MatOfDMatch> matchMatrices = new ArrayList<MatOfDMatch>();
+                        matcher.knnMatch(trainingImageDescriptors, descriptors, matchMatrices, 2);
 
-                List<Point> goodMatches = new ArrayList<Point>();
-                for (MatOfDMatch matchMatrix : matchMatrices) {
-                    // TODO: make sure we are getting the correct m and n
-                    List<DMatch> matches = matchMatrix.toList();
+                        List<Point> goodMatches = new ArrayList<Point>();
+                        for (MatOfDMatch matchMatrix : matchMatrices) {
+                            // TODO: make sure we are getting the correct m and n
+                            List<DMatch> matches = matchMatrix.toList();
 
-                    DMatch m = matches.get(0);
-                    DMatch n = matches.get(1);
+                            DMatch m = matches.get(0);
+                            DMatch n = matches.get(1);
 
-                    if (m.distance < 0.75 * n.distance) {
-                        goodMatches.add(new Point(keyPoints[m.trainIdx].pt.x, keyPoints[m.trainIdx].pt.y));
+                            if (m.distance < 0.75 * n.distance) {
+                                goodMatches.add(new Point(keyPoints[m.trainIdx].pt.x, keyPoints[m.trainIdx].pt.y));
+                            }
+                        }
+
+                        hypothesis = meanShift(goodMatches, 10);
+                        Log.i("DebugDebug Hypothesis", hypothesis.x + ", " + hypothesis.y);
                     }
-                }
-
-                hypothesis = meanShift(goodMatches, 10);
-                Log.i("DebugDebug Hypothesis", hypothesis.x + ", " + hypothesis.y);
+                }.run(image);
             }
-        }.run(image);
+        }).start();
     }
 
     public boolean hasTrainingImage() {
