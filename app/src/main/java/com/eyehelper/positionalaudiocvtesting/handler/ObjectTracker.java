@@ -9,6 +9,7 @@ import com.eyehelper.positionalaudiocvtesting.cv.SIFTWrapper;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.Point;
+import org.opencv.core.Range;
 import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.KeyPoint;
@@ -152,8 +153,20 @@ public class ObjectTracker {
             new SIFTWrapper() {
                 @Override
                 public void callback(KeyPoint[] points, Mat descriptors) {
-                    Log.i("DebugDebug", "Here" + descriptors.toString());
-                    trainingImageDescriptors = descriptors;
+                    Point point;
+                    double[] rows = new double[points.length];
+                    int ptr = 0;
+                    for (int i = 0; i < points.length; i++) {
+                        point = points[i].pt;
+                        if ((point.x >= coordinates.first.x
+                                || point.x >= coordinates.second.x)
+                                && (point.y >= coordinates.first.y
+                                || point.y >= coordinates.second.y)) {
+                            rows[ptr] = i;
+                            ptr++;
+                        }
+                    }
+                    trainingImageDescriptors = new Mat(descriptors, new Range(rows));
                 }
             }.run(trainingImage);
 
