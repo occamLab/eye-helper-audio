@@ -1,14 +1,13 @@
-package com.eyehelper.positionalaudiocvtesting;
+package com.eyehelper.positionalaudiocvtesting.handler;
 
 import android.util.Log;
 import android.util.Pair;
 
+import com.eyehelper.positionalaudiocvtesting.Utils;
 import com.eyehelper.positionalaudiocvtesting.cv.SIFTWrapper;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
-import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
 import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorMatcher;
@@ -21,16 +20,14 @@ public class ObjectTracker {
     private static final String TAG = "ObjectTracker";
 
     // Object Tracker's Guess
-    public Point hypothesis;
-
+    public Point hypothesis = new Point(0, 0);
+    public Pair<Point, Point> coordinates;
+    boolean hasTrainingImage = false;
     // Current Image Shown on Camera
     private Mat currentImage;
-
     // Training Image
     private Mat trainingImageDescriptors;
-    public Pair<Point, Point> coordinates;
     private Mat trainingImage;
-    boolean hasTrainingImage = false;
 
     public void saveCurrentImage(Mat image) {
         currentImage = image;
@@ -67,6 +64,10 @@ public class ObjectTracker {
                 Log.i("DebugDebug Hypothesis", hypothesis.x + ", " + hypothesis.y);
             }
         }.run(image);
+    }
+
+    public boolean hasTrainingImage() {
+        return hasTrainingImage;
     }
 
     private Point meanShift(List<Point> keypoints, double threshold) {
@@ -132,7 +133,7 @@ public class ObjectTracker {
 
         if (coordinates == null) {
             // this is the first corner of the rectangle
-            coordinates = new Pair<Point, Point>(new Point(x, y), new Point(0,0));
+            coordinates = new Pair<Point, Point>(new Point(x, y), new Point(0, 0));
             trainingImage = currentImage.clone();
             // TODO: freeze the frame until the training currentImage selection is complete
         } else {
@@ -159,9 +160,5 @@ public class ObjectTracker {
             hasTrainingImage = true;
         }
         return true;
-    }
-
-    public boolean hasTrainingImage() {
-        return hasTrainingImage;
     }
 }

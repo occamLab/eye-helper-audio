@@ -2,43 +2,34 @@ package com.eyehelper.positionalaudiocvtesting.cv;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
 import org.opencv.features2d.KeyPoint;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by sihrc on 11/8/14.
  */
 public abstract class SIFTWrapper {
 
-    static
-    {
-        try
-        {
+    static {
+        try {
             // Load necessary libraries.
             System.loadLibrary("opencv_java");
             System.loadLibrary("nonfree");
             System.loadLibrary("nonfree_jni");
-        }
-        catch( UnsatisfiedLinkError e )
-        {
+        } catch (UnsatisfiedLinkError e) {
             System.err.println("Native code library failed to load.\n" + e);
         }
     }
-    public static native float[] runSIFT(int width, int height, short[] image, int[] size);
 
     public void run(Mat image) {
         int width = image.width();
         int height = image.height();
 
         // Allocated for SIFT return dimensions
-        int[] size = new int [2];
+        int[] size = new int[2];
 
         // Get short[] array of image
-        final byte[] imageInBytes = new byte[(int)(image.total()) * image.channels()]; //FIXME - long -> int conversation may be unsafe
+        final byte[] imageInBytes = new byte[(int) (image.total()) * image.channels()]; //FIXME - long -> int conversation may be unsafe
         image.get(0, 0, imageInBytes);
 
         short[] imageInShorts = new short[imageInBytes.length];
@@ -67,12 +58,14 @@ public abstract class SIFTWrapper {
             for (int j = 0; j < size[1]; j++) {
                 temp[j] = result[i * (2 + size[1]) + j + 1];
             }
-            descriptors.put(i,0, temp);
+            descriptors.put(i, 0, temp);
         }
 
         // Do stuff with the keypoints and descriptors
         callback(keyPoints, descriptors);
     }
+
+    public static native float[] runSIFT(int width, int height, short[] image, int[] size);
 
     public abstract void callback(KeyPoint[] keyPoints, Mat descriptors);
 }

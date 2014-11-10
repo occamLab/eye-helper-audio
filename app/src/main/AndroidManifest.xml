@@ -17,7 +17,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".views.MyActivity"
+            android:name=".views.ObjectTrackingActivity"
             android:label="@string/app_name"
             android:theme="@android:style/Theme.NoTitleBar">
         <intent-filter>
