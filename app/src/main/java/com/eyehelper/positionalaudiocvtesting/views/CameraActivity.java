@@ -1,7 +1,7 @@
 package com.eyehelper.positionalaudiocvtesting.views;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -10,14 +10,16 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.eyehelper.positionalaudiocvtesting.R;
+import com.eyehelper.positionalaudiocvtesting.Utils;
 import com.eyehelper.positionalaudiocvtesting.handler.AudioHandler;
 import com.eyehelper.positionalaudiocvtesting.handler.ObjectTracker;
 import com.eyehelper.positionalaudiocvtesting.handler.OrientationHandler;
+import com.eyehelper.positionalaudiocvtesting.views.custom.CameraPreview;
 
 import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -26,17 +28,17 @@ import butterknife.ButterKnife;
 import butterknife.InjectView;
 
 
-public class CameraActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class CameraActivity extends Activity {
     private static final String TAG = "OCVSample::Activity";
 
     //Camera View
     @InjectView(R.id.camera_view)
-    CameraBridgeViewBase cameraPreview;
+    CameraPreview cameraPreview;
 
     private double imageRows;
     private double imageCols;
     private int frames;
-    private static final int FPS = 10;
+    private static final int FPS = 30;
 
     private ObjectTracker objectTracker;
     private AudioHandler positionalAudio;
@@ -51,7 +53,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
                 //The app loaded successfully
                 case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV loaded successfully");
-                    cameraPreview.enableView();
+                    cameraPreview.init();
                 }
                 break;
                 //Otherwise it didn't
@@ -62,6 +64,9 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
             }
         }
     };
+
+    public CameraActivity() {
+    }
 
 
     //When the activity is created
@@ -78,6 +83,8 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         positionalAudio = new AudioHandler(this, objectTracker.hypothesis.x, objectTracker.hypothesis.y);
         orientationHandler = new OrientationHandler(this);
 
+        cameraPreview.setWindowManager(getWindowManager());
+        cameraPreview.init();
 
         final GestureDetector gestureDetector = new GestureDetector(this, new TapGestureListener());
         cameraPreview.setOnTouchListener(new View.OnTouchListener() {
@@ -89,9 +96,38 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         });
 
 
-        // why does this line of code happen twice?
-        // Make this activity the listener for our camera view
-        cameraPreview.setCvCameraViewListener(this);
+        // Get Preview Frame Callbacks
+        cameraPreview.setPreviewCallback(new Camera.PreviewCallback() {
+            @Override
+            public void onPreviewFrame(byte[] bytes, Camera camera) {
+                if (bytes == null || bytes.length == 0) {
+                    return;
+                }
+
+                Camera.Size size = camera.getParameters().getPreviewSize();
+                Mat greyImage = new Mat(size.height, size.width, CvType.CV_8UC1);
+                greyImage.put(0, 0, bytes);
+
+                if (!objectTracker.hasTrainingImage()) {
+                    imageCols = greyImage.cols();
+                    imageRows = greyImage.rows();
+                    objectTracker.saveCurrentImage(greyImage);
+                }
+
+                if (frames == FPS) {
+                    Mat resized = new Mat();
+                    Imgproc.resize(greyImage, resized, new Size(), .3, .3, 1);
+                    objectTracker.matchObject(resized);
+                    frames = 0;
+                } else {
+                    frames++;
+                }
+
+//        if (objectTracker.coordinates != null) {
+//            Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
+//        }
+            }
+        });
     }
 
     @Override
@@ -100,7 +136,7 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         //When the app is resumed, restart the camera asynchronously
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, loaderCallback);
         orientationHandler.resume();
-        positionalAudio.startSoundThread();
+//        positionalAudio.startSoundThread();
     }
 
     @Override
@@ -109,46 +145,10 @@ public class CameraActivity extends Activity implements CameraBridgeViewBase.CvC
         //When the app is paused, stop the camera and pause the music
         orientationHandler.pause();
         if (cameraPreview != null) {
-            cameraPreview.disableView();
+            cameraPreview.onDestroy();
         }
     }
 
-
-    //Right after the camera starts
-    @Override
-    public void onCameraViewStarted(int width, int height) {
-    }
-
-    //when the camera view stops
-    @Override
-    public void onCameraViewStopped() {
-    }
-
-    //Every time we get a new camera frame
-    @Override
-    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-        Mat greyImage = inputFrame.gray();
-        imageCols = greyImage.cols();
-        imageRows = greyImage.rows();
-
-        if (!objectTracker.hasTrainingImage()) {
-            objectTracker.saveCurrentImage(greyImage);
-        }
-
-        if (!greyImage.empty() && frames == FPS) {
-            Mat resized = new Mat();
-            Imgproc.resize(greyImage, resized, new Size(), .3, .3, 1);
-            objectTracker.matchObject(resized);
-            frames = 0;
-        } else {
-            frames++;
-        }
-
-//        if (objectTracker.coordinates != null) {
-//            Core.rectangle(greyImage, objectTracker.coordinates.first, objectTracker.coordinates.first, new Scalar(0, 0, 255), 0, 8, 0);
-//        }
-        return greyImage;
-    }
 
 
     class TapGestureListener extends GestureDetector.SimpleOnGestureListener {
