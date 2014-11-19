@@ -49,7 +49,9 @@ public class ObjectTracker {
                     public void callback(KeyPoint[] keyPoints, Mat descriptors) {
                         DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
                         List<MatOfDMatch> matchMatrices = new ArrayList<MatOfDMatch>();
-                        matcher.knnMatch(trainingImageDescriptors, descriptors, matchMatrices, 2);
+//                        Log.i("DebugDebug", descriptors.toString());                        Log.i("DebugDebug", trainingImageDescriptors.toString());
+
+                        matcher.knnMatch(descriptors, trainingImageDescriptors, matchMatrices, 2);
 
                         List<Point> goodMatches = new ArrayList<Point>();
                         for (MatOfDMatch matchMatrix : matchMatrices) {
@@ -67,7 +69,7 @@ public class ObjectTracker {
                         hypothesis = meanShift(goodMatches, 10);
                         Log.i("DebugDebug Hypothesis", hypothesis.x + ", " + hypothesis.y);
                     }
-                }.run(image);
+                }.run(currentImage);
             }
         }).start();
     }
