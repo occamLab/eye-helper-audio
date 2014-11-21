@@ -49,25 +49,28 @@ public class ObjectTracker {
                     public void callback(KeyPoint[] keyPoints, Mat descriptors) {
                         DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE);
                         List<MatOfDMatch> matchMatrices = new ArrayList<MatOfDMatch>();
-//                        Log.i("DebugDebug", descriptors.toString());                        Log.i("DebugDebug", trainingImageDescriptors.toString());
-
+                        if (trainingImageDescriptors.empty()) {
+                            Log.e("Empty Training Image", "NO DESCRIPTORS FOUND");
+                        }
                         matcher.knnMatch(descriptors, trainingImageDescriptors, matchMatrices, 2);
-
                         List<Point> goodMatches = new ArrayList<Point>();
                         for (MatOfDMatch matchMatrix : matchMatrices) {
                             // TODO: make sure we are getting the correct m and n
                             List<DMatch> matches = matchMatrix.toList();
+                            //FIXME - why is matches.size() always 1
+//                            if (matches.size() >= 2) {
+//                                DMatch m = matches.get(0);
+//                                DMatch n = matches.get(1);
+//                                if (m.distance < 0.75 * n.distance) {
+//                                    goodMatches.add(new Point(keyPoints[m.trainIdx].pt.x, keyPoints[m.trainIdx].pt.y));
+//                                }
+//                            }
+                         goodMatches.add(new Point(keyPoints[matches.get(0).trainIdx].pt.x, keyPoints[matches.get(0).trainIdx].pt.y));
 
-                            DMatch m = matches.get(0);
-                            DMatch n = matches.get(1);
-
-                            if (m.distance < 0.75 * n.distance) {
-                                goodMatches.add(new Point(keyPoints[m.trainIdx].pt.x, keyPoints[m.trainIdx].pt.y));
-                            }
                         }
 
                         hypothesis = meanShift(goodMatches, 10);
-                        Log.i("DebugDebug Hypothesis", hypothesis.x + ", " + hypothesis.y);
+                        Log.i("DebugDebug", hypothesis + " hypothesis");
                     }
                 }.run(currentImage);
             }
@@ -173,7 +176,7 @@ public class ObjectTracker {
                             ptr++;
                         }
                     }
-                    trainingImageDescriptors = new Mat(descriptors, new Range(rows));
+                    trainingImageDescriptors = descriptors.rowRange(new Range(rows));
                 }
             }.run(trainingImage);
 
